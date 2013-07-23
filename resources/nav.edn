@@ -1,0 +1,4 @@
+[
+ {:label "Home" :href "/index.html"}
+ {:label "Resources" :href "/resources/index.html"}
+ ]

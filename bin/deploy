@@ -1,0 +1,48 @@
+#!/bin/bash
+
+require_clean_work_tree () {
+    git rev-parse --verify HEAD >/dev/null || exit 1
+    git update-index -q --ignore-submodules --refresh
+    err=0
+
+    if ! git diff-files --quiet --ignore-submodules
+    then
+        echo >&2 "Cannot deploy: You have unstaged changes."
+        err=1
+    fi
+
+    if ! git diff-index --cached --quiet --ignore-submodules HEAD --
+    then
+        if [ $err = 0 ]
+        then
+            echo >&2 "Cannot deploy: Your index contains uncommitted changes."
+        else
+            echo >&2 "Additionally, your index contains uncommitted changes."
+        fi
+        err=1
+    fi
+
+    if [ $err = 1 ]
+    then
+        exit 1
+    fi
+}
+
+require_commit_is_pushed () {
+    if [ $(git merge-base HEAD ${REMOTE}/master) = $(git rev-parse --verify HEAD) ]
+    then
+        return
+    else
+        echo "Cannot deploy because your HEAD is not reachable from $REMOTE/master, so push it!"
+        exit 1
+    fi
+}
+
+REMOTE=origin
+
+require_clean_work_tree
+require_commit_is_pushed
+
+ssh -A juxtweb@juxt.pro "
+cd juxtweb;
+git pull"

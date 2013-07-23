@@ -1,0 +1,27 @@
+<div class="row-fluid">
+  <div class="span6">
+    <h2>Articles</h2>
+    <!-- TODO: list of articles from articles.edn, which should be pushed into mustache -->
+    <!-- TODO: Article source code should allow mustache tags for content generation, etc.. -->
+    <dl>
+      {{#articles}}
+      <dt><a href="/{{path}}">{{title}}</a></dt>
+      <dd>
+        <p>{{{abstract}}}</p>
+        {{#chunked}}
+        <p>Either view as a <a href="/{{path}}">single HTML page</a> or as individual chapters :-</p>
+        <ul style="list-style-type: none">
+          {{#toc}}
+          <li><a href="/{{path}}?sect={{section}}">{{title}}</a></li>
+          {{/toc}}
+        </ul>
+        {{/chunked}}
+      </dd>
+      {{/articles}}
+    </dl>
+  </div>
+  <div class="span6">
+    <h2>Training materials</h2>
+    <p>Links to training materials will shortly appear here.</p>
+  </div>
+</div>

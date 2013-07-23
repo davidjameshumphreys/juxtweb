@@ -1,0 +1,58 @@
+[
+ {:date "2013-06-20T18:30+01:00"
+  :location "http://DBpedia.org/resource/London"
+  :title "The rise and fall of mutable state."
+  :presenter "malcolm.sparks"
+  :link "http://skillsmatter.com/podcast/scala/the-rise-and-fall-of-mutable-state"}
+
+ {:event "Devoxx 2013"
+  :location "http://DBpedia.org/resource/London"
+  :title "Reflections on a real-world Clojure application"
+  :presenter "malcolm.sparks"
+  :link "http://www.parleys.com/play/51683ab1e4b07b9cc6de3286/chapter0/about"}
+
+ {:event "ClojureExchange 2012"
+  :location "http://DBpedia.org/resource/London"
+  :title "Ciao! learning Italian with Clojure core.logic"
+  :presenter "malcolm.sparks"
+  :link "http://skillsmatter.com/podcast/scala/building-the-web-of-data-with-clojure"
+  }
+
+ {:event "EuroClojure 2012"
+  :location "http://DBpedia.org/resource/London"
+  :title "Clojure, Clojurescript and REST"
+  :presenter "malcolm.sparks"
+  :link "http://vimeo.com/45562553"
+  }
+
+ {:date "2012-01"
+  :location "http://DBpedia.org/resource/London"
+  :title "Reflections on a real-world Clojure application'"
+  :presenter "malcolm.sparks"
+  :link "http://skillsmatter.com/podcast/scala/real-world-clojure"
+  }
+
+ {:event "QCon 2008"
+  :location "http://DBpedia.org/resource/London"
+  :title "Stuck on you: separating business logic from infrastructure code"
+  :presenter "malcolm.sparks"
+  :link "http://qconlondon.com/london-2008/speakers/"
+  }
+
+ {:event "JavaZone 2005"
+  :location "http://DBpedia.org/resource/Oslo"
+  :title "Modularity (or how to tame a large Java project by splitting it into pieces)"
+  :presenter "malcolm.sparks"
+  }
+
+ {:event "XP 2004"
+  :location "http://DBpedia.org/resource/Garmisch-Partenkirchen"
+  :title "Designing the Ultimate Acceptance Testing Framework"
+  :presenter "malcolm.sparks"
+  }
+
+ {:event "JavaOne 2000"
+  :location "http://DBpedia.org/resource/San_Francisco"
+  :title "iPortal J2EE Application Server'"
+  :presenter "malcolm.sparks"
+  }]

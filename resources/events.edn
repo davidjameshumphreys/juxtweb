@@ -1,0 +1,18 @@
+[
+ {:date #inst "2013-06-03T18:30+01:00"
+  :description "Jon Pither spoke on _Functional Programming in the Enterprise_,  [see the talk here](http://skillsmatter.com/podcast/scala/functional-programming-in-the-enterprise-4235)."}
+
+ {:date #inst "2013-06-20T18:30+01:00"
+  :description "Malcolm Sparks spoke on _The rise and fall of mutable state_. See podcast [here](http://skillsmatter.com/podcast/scala/the-rise-and-fall-of-mutable-state)."}
+
+ {:date #inst "2013-06-24T16:00+01:00"
+  :description "Jon Pither [speaks](http://www.spaconference.org/spa2013/sessions/session514.html) at [SPA 2013](http://www.spaconference.org/spa2013/)"}
+
+ {:date #inst "2013-07-15T09:30+01:00"
+  :description "__Our 2-day ['Fast-track to Clojure' training course](http://skillsmatter.com/course/scala/fast-track-to-clojure)__ - [contact us](mailto:malcolm@juxt.pro?subject=Clojure-course-enquiry) for booking details\n\n* Location: [The Skills Matter eXchange](http://skillsmatter.com/location-details/scala/2892/96), London\n* Price: £1295.00 + VAT
+"}
+
+ {:date #inst "2013-09-07T09:30+01:00"
+  :description "Adrian Mowat and Malcolm Sparks are running a 1-day training course in Edinburgh. Contact [Adrian](mailto:adrian.mowat@gmail.com?subject=Clojure-training) or [Malcolm](mailto:malcolm@juxt.pro?subject=Clojure-training-in-Edinburgh) for more details."}
+
+ ]

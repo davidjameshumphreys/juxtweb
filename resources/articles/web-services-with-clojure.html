@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Web services with Clojure</title>
+  </head>
+  <body>
+    <article>
+      <header>
+        <hgroup>
+          <h1>
+            {{title}}
+          </h1>
+        </hgroup>
+        <aside class="abstract">
+          <p>
+            How to write RESTful webservices with Clojure's Liberator library.
+          </p>
+          <p>
+            This article was published in Software Developers Journal in early 2013.
+          </p>
+        </aside>
+      </header>
+      <section>
+        <h1>Introduction</h1>
+        <p>
+          The past few years have seen the arrival of the much heralded
+          'programmable web'. While the early web consisted of humans
+          using the Web via their browsers, the commercial viability of
+          'cloud' services together with the growth in smart-phone and
+          tablet apps have placed increasing importance on making
+          services available, behind the scenes, to programs. Today,
+          developers have a myriad of APIs available to them via the
+          Internet- such as persistent storage and backup, e-mail
+          messaging, notifications, analytics, SMS, financial payments,
+          social media integration, authentication and more. Adopting
+          these services can be extremely cost-effective when compared
+          to the equivalent development costs when building this same
+          functionality inside the application. The web API has become
+          the integration glue that binds an increasing number of
+          applications and services together.
+        </p>
+        <p>
+          Of course, these services must be provided quickly, cheaply,
+          and at the quality necessary for them to work cheaply and
+          reliably to consumers across the planet. Implementing web
+          services in Clojure is a good choice, especially for
+          organisations with an existing investment in Java. Clojure has
+          excellent built-in support for converting between types and
+          between data structures, ideal for conversions and
+          transformations necessary in exposing data to web clients. It
+          also offers near seamless access to a vast range of existing
+          Java libraries. Finally, Clojure is an excellent general
+          purpose programming language in its own right, giving a
+          breadth of features that surpass those offered within
+          specialist web frameworks.
+        </p>
+        <p>Once you are up to speed with Clojure, you'll enjoy a rapid, dynamic, responsive development cycle. Plus you'll benefit from the maturity and performance of the Java Virtual Machine. This article will show how Clojure's web services stack is built up, layer by layer.</p>
+<h2 id="ring">Ring</h2>
+<p>We'll start with Ring. Ring provides a bridge from web servers, which handle the low-level socket handling and data buffering tasks, to web applications, which handle the higher-level web requests and create the responses. It is this bridge that allows Clojure applications to be hosted, unchanged, on a variety of platforms including J2EE application servers, Jetty, netty (with aleph) not forgetting on-line hosting services such as Amazon's Beanstalk and Heroku.</p>
+<h2 id="come-hack-with-me">Come hack with me</h2>
+<p>Let's start by creating a Ring application. If you want to follow along and try these examples for yourself, you'll need the following setup :-</p>
+<ul>
+<li><p>A command shell.</p></li>
+<li><p>Java (version 1.6 or above). Either OpenJDK or Oracle's Java Standard Edition (available from <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>) will suffice.</p></li>
+<li><p>curl (or an equivalent, such as wget or httpie) for command-line testing</p></li>
+<li><p>Leiningen, version 2.0 or above.</p></li>
+</ul>
+<p>Leiningen is the <em>de facto</em> Clojure project tool and installation instructions can be found here: <a href="http://leiningen.org/">http://leiningen.org/</a></p>
+<p>Once you have the pre-requisites, start by creating a project using Leiningen.</p>
+<pre><code>$ lein new rest_service</code></pre>
+<p>This will create a directory <code>rest_service</code>, containing a file <code>project.clj</code>. You should first edit this file to add the various libraries we'll be using throughout this article - see Figure 1. Modify the <code>rest_service/core.clj</code> file as shown in Figure 2.</p>
+<p>Figure 1: &quot;The project.clj file&quot;</p>
+<pre><code>(defproject rest_service &quot;0.1.0&quot;
+  :description &quot;REST service examples&quot;
+  :url &quot;http://clojure-liberator.github.com&quot;
+  :license {:name &quot;Eclipse Public License&quot;
+            :url &quot;http://www.eclipse.org/legal/epl-v10.html&quot;}
+
+  :plugins [[lein-ring &quot;0.8.3&quot;]]
+
+  :ring {:handler rest-service.core/app}
+
+  :dependencies [[org.clojure/clojure &quot;1.4.0&quot;]
+                 [ring/ring-jetty-adapter &quot;1.1.0&quot;]
+                 [compojure &quot;1.1.5&quot;]
+                 [cheshire &quot;5.0.2&quot;]
+                 [liberator &quot;0.8.0&quot;]])
+                 </code></pre>
+<p>Figure 2: &quot;A simple Ring handler&quot;</p>
+<pre><code>(ns rest-service.core)
+
+(defn app [request]
+  {:status 200
+   :headers {&quot;Content-Type&quot; &quot;text/html;charset=UTF-8&quot;}
+   :body &quot;&lt;h1&gt;Hello World!&lt;/h1&gt;\r\n&quot;})</code></pre>
+<p>Now test the service with the following command :-</p>
+<pre><code>$ lein ring server-headless</code></pre>
+<p>Point your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the usual greeting, <em>Hello World!</em>. Alternatively, use curl to test the service as follows :-</p>
+<pre><code>$ curl -i localhost:3000</code></pre>
+<p>You should get the following response :-</p>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: text/html;charset=ISO-8859-1
+Content-Length: 20
+
+&lt;h1&gt;Hello World!&lt;/h1&gt;</code></pre>
+<p>We achieved this by providing a function with a single argument (request) which returned a literal Clojure map. Ring requires that responses be returned as a map containing three entries (the response status, headers and body). Ring refers to functions that comply with these rules as <em>handlers</em>.</p>
+<h2 id="ring-middleware">Ring middleware</h2>
+<p>The beauty of Ring is in its simplicity and minimalism- we have already covered the Ring SPI in full! But if we were to write our entire application in one function it would soon grow too large and too expensive to maintain. To address this, the Ring library emphasizes a pattern (or idiom) where functionality can be added in successive stages. It calls functions that are written to this idiom 'middleware'.</p>
+<p>The idiom is straight-forward: a Ring middleware function is one that accepts a Ring handler as an argument and returns a new Ring handler that extends the functionality of the original. It is a functional version of the object-oriented interceptor pattern, <a href="http://en.wikipedia.org/wiki/Interceptor_pattern">http://en.wikipedia.org/wiki/Interceptor_pattern</a>. Ring itself offers lots of such functions in its <code>ring.middleware</code> namespace. One example is <code>wrap-head</code> :-</p>
+<pre><code>(defn wrap-head
+  &quot;Middleware that turns any HEAD request into a GET, and then sets the response
+  body to nil.&quot;
+  [handler]
+  (fn [request]
+    (if (= :head (:request-method request))
+      (-&gt; request
+          (assoc :request-method :get)
+          (handler)
+          (assoc :body nil))
+      (handler request))))</code></pre>
+<p>The <code>wrap-head</code> function is typical of many Ring middleware functions. It takes a handler as an argument and returns a new handler. On receiving a HEAD request, the new handler calls the original handler, making the HEAD request look like a GET request. The original handler takes over, and returns the usual status, headers and body. However, the new handler strips out the body before returning the response to its caller.</p>
+<p>Notice that this functionality is entirely contained within the middleware function and requires no other modifications to the application. This idea allows us to divide our functionality into separate independent functions. We can later re-assemble those functions into a composite function which becomes our final Ring handler.</p>
+<p>Let's see how we can use the wrap-head function in our example. Change the <code>core.clj</code> file as shown in Figure 3.</p>
+<p>Figure 3: &quot;Using Ring middleware: wrap-head&quot;</p>
+<pre><code>(ns rest-service.core
+  (:require [ring.middleware.head :refer (wrap-head)]))
+
+(def app
+  (-&gt;
+   (fn [request]
+     {:status 200
+      :headers {&quot;Content-Type&quot; &quot;text/html;charset=UTF-8&quot;}
+      :body &quot;&lt;h1&gt;Hello World&lt;/h1&gt;\r\n&quot;})
+   (wrap-head)))</code></pre>
+<p>Now test it by re-running the server and calling <code>curl</code> with an HTTP HEAD method :-</p>
+<pre><code>$ lein ring server-headless
+
+$ curl -i -X HEAD localhost:3000
+
+HTTP/1.1 200 OK
+Content-Type: text/html;charset=UTF-8
+Content-Length: 0</code></pre>
+<p>Notice that now the body has been removed and the <code>Content-Length</code> value is 0.</p>
+<h2 id="restful-web-services">RESTful web services</h2>
+<p>We have now seen how to create a simple web-service using Ring and an elegant technique of separating cross-cutting concerns into 'middleware' functions. But Ring's support for application logic <em>within</em> its handlers is quite basic. If you are planning to create a set of resources that respond only to HEAD and GET requests, and you also have control over the development of the client, then you should implement this service using only Ring middleware. The primary advantage of Ring middleware is its modularity which has enabled the emergence of numerous third-party middleware libraries.</p>
+<p>It's difficult, however, to create a chain of Ring middleware that provides the functionality of a full-featured RESTful web service, or at least one that is easy to configure. The concept of Ring middleware is based a chain metaphor, where each link performs some activity before handing control to the next link in the chain. The HTTP specification is difficult to implement in this linear style of control flow. Instead, it is easier to configure the web service by modelling it as a flow-chart, giving the developer the option of determining the outcome of <em>decision steps</em>. This is the style behind RESTful web service libraries such as Erlang's webmachine. Clojure has a similar library, Liberator, which provides this style of configuration.</p>
+<p>A full RESTful web service would be expected to offer support for other HTTP methods, such as <code>POST</code>, <code>PUT</code>, <code>DELETE</code> and <code>OPTIONS</code>. Not all methods should be handled in the same way, and yet completely separating the methods for the same resource to a different handler can lead to discrepancies. It should also support content negotiation, which allows for a resource to have multiple representations, the selection of which would depend on the capabilities and preferences of the client. This may not be relevant if your service is only exchanging JSON documents. However, having the capability for your resources to serve up CSV to Excel users, <em>edn</em> format to ClojureScript clients or plain-text lines to shell scripts can save developments costs for clients.</p>
+<p>RESTful services should also allow for caching of responses. The most effective way of getting your services to scale is to reduce the amount of unnecessary work they have to do by allowing proxies and browser caches to do their job, thus preventing requests from being issued in the first place. The HTTP specification offers 2 caching models, including the validation model (based on a last modified date or an 'ETag') and the expiry model (based on a date or a time to live). But these won't help without the application developer being involved in various decisions.</p>
+<p>Just as crucially, a RESTful service should also return the correct status codes and response headers. These are the aspects of REST that you should consider when deciding on whether you should use a library such as Liberator.</p>
+<h2 id="liberator">Liberator</h2>
+<p>Let's look now at how Liberator works. Liberator provides a <code>resource</code> function (and corresponding <code>defresource</code> macro) which builds a Ring handler from a map provided by the developer. Each map contains entries which determine how the resource should respond in certain situations. There are four entry types: <em>decisions</em>, <em>declarations</em>, <em>actions</em> and <em>handlers</em>.</p>
+<p>Entries can be given constant values (where decisions can be made at compile time) and functions (where decisions depend on the incoming web request and must therefore be made at runtime). When an entry value is a function, it is called with a single context argument which contains the request, the resource (the map defining the resource), and the negotiated representation, status and status message.</p>
+<p><em>Decisions</em> are conditional branching points in a flow-chart which determine how the logic flow should proceed. Decisions return booleans, but can optionally include map entries which are merged with the context.</p>
+<p>Figure 4 shows a number of examples which are all valid values for the <code>:exists?</code> entry.</p>
+<p>Figure 4: &quot;Valid Liberator settings for the :exists? key&quot;</p>
+<pre><code>:exists? true
+
+:exists? (constantly false)
+
+:exists? (.exists (io/file &quot;foo.txt&quot;))
+
+:exists? (fn [ctx]
+           (let [f (io/file &quot;foo.txt&quot;)]
+             [(.exists f) {:file f}]))</code></pre>
+<p>The final example returns a pair, containing the boolean decision and a map which is merged with the context, allowing details to be discovered and communicated to subsequent functions.</p>
+<p><em>Declarations</em> state what the resource's capabilities are. Here's an example of an entry that declares the languages in which a resource has representations :-</p>
+<pre><code>:available-languages [&quot;en-GB&quot; &quot;en-US&quot; &quot;de&quot; &quot;fr&quot;]</code></pre>
+<p><em>Actions</em> are side-effecting functions provided by the developer and are the only places where side-effects are allowed, thus isolating state mutations to a known set of functions. Actions are indicated by an exclamation mark suffix, the LISP convention for functions that mutate state.</p>
+<p>Finally, <em>handlers</em> are responsible for creating the response body. Their keys begin with <code>handle-</code>. A Liberator handler receives more information than a Ring handler would. In addition to the web request, all Liberator handlers have access to the negotiated representation to create (the media type, language and possibly charset) together with the status and status message that has been determined prior to calling the handler. Freed from having to determine this information for itself, the handler can focus on generating the response body.</p>
+<h2 id="content-negotiation-with-liberator">Content negotiation with Liberator</h2>
+<p>Let's take Liberator for a quick test drive. Modify the <code>core.clj</code> file as it appears in Figure 5. :-</p>
+<p>Figure 5: &quot;Liberator configuration for simple media-type negotiation&quot;</p>
+<pre><code>(ns rest-service.core
+  (:require [liberator.core :refer (resource)]
+            [cheshire.core :refer (generate-string)]))
+
+(def app
+  (resource
+   :available-media-types [&quot;application/json&quot;
+                           &quot;application/edn&quot;
+                           &quot;text/plain&quot;]
+   :handle-ok (fn [ctx]
+                (case (get-in ctx [:representation :media-type])
+                  &quot;application/json&quot; (generate-string &quot;You want JSON&quot;)
+                  &quot;application/edn&quot; &quot;You prefer edn\n&quot;
+                  &quot;text/plain&quot; &quot;You prefer plain text\n&quot;
+                  ))))</code></pre>
+<p>Now test the service as follows :-</p>
+<pre><code>$ lein ring server-headless
+
+$ curl -i -H &quot;Accept: text/html&quot; localhost:3000</code></pre>
+<p>This should result in a 406 status code, because <code>text/html</code> isn't one of the media types that the service supports.</p>
+<pre><code>HTTP/1.1 406 Not Acceptable
+Content-Type: text/plain;charset=ISO-8859-1
+Content-Length: 33
+
+No acceptable resource available.</code></pre>
+<p>Let's try asking for one of the media-types that <em>is</em> available :-</p>
+<pre><code>$ curl -i -H &quot;Accept: text/plain&quot; localhost:3000
+
+HTTP/1.1 200 OK
+Content-Type: text/plain;charset=UTF-8
+Content-Length: 22
+
+You prefer plain text</code></pre>
+<p>Liberator expects handlers to generate the representation but will help out in producing the response that is acceptable by the client. For example, if the handler produces a String, as in our example, Liberator will ensure that the String is encoded using the preferred (negotiated) charset.</p>
+<p>Since Liberator resources are Ring handlers, it is possible to wrap them in Ring middleware. For example, instead of having to generate JSON inside the handler, it could simply return a String which is converted to JSON in a Ring middleware wrapper than is able to view the results of the content negotation provided by Liberator. Figure 6 shows how Liberator and Ring middleware can be used together.</p>
+<p>Figure 6: &quot;Combining a Liberator resource with Ring middleware.&quot;</p>
+<pre><code>(ns rest-service.core
+  (:require [liberator.core :refer (resource)]
+            [cheshire.core :refer (generate-string)])
+  (:import (liberator.representation MapRepresentation)))
+
+(defn wrap-json-response
+  &quot;Wrap response in json if content negotiation demands it.&quot;
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (if (re-matches #&quot;application/json;?.*&quot;
+                      (or (get-in response [:headers &quot;Content-Type&quot;])
+                          &quot;&quot;))
+        (update-in response [:body] generate-string {:pretty true})
+        response))))
+
+(def app
+  (-&gt; (resource
+       :available-media-types [&quot;application/json&quot;
+                               &quot;application/edn&quot;
+                               &quot;text/plain&quot;]
+       :handle-ok (fn [ctx]
+                    (case (get-in ctx [:representation :media-type])
+                      &quot;application/json&quot; (MapRepresentation.
+                                          {:message &quot;You picked JSON&quot;})
+                      &quot;application/edn&quot; &quot;You picked edn\n&quot;
+                      &quot;text/plain&quot; &quot;You picked plain text\n&quot;
+                      )))
+      (wrap-json-response)))</code></pre>
+<p>Note: A Liberator handler can elect to return a map, and when it does so the map is treated as a Ring response. If the handler wishes to return a map of data which will be subjected to further processing by Ring middleware, it can tunnel the map inside a MapRepresentation record.</p>
+<p>Here is another common example where a <code>POST</code> method is used on a resource to create a subordinate resource. For example, a user may post a comment to a blog article, which might cause cause database record to be inserted in a table and associated with the parent article.</p>
+<p>Figure 7 illustrates how you might configure a resource in Liberator to properly handle <code>POST</code> requests.</p>
+<p>Figure 7: Handling POST requests with Liberator</p>
+<pre><code>(ns rest-service.core
+  (:require [liberator.core :refer (resource)]
+            [ring.middleware.params :refer (wrap-params)]))
+
+(def app
+  (-&gt; (resource
+       :method-allowed? #(#{:post}
+                          (get-in % [:request :request-method]))
+       :available-media-types [&quot;*&quot;]
+       :post! (fn [ctx]
+                (println (get-in ctx [:request :form-params]))
+                ;; Insert into a data-store, return the id.
+                {:comment-id 1234})
+       :post-redirect? true
+       :see-other #(format &quot;http://localhost:3000/comments/%s&quot;
+                     (:comment-id %)))
+      (wrap-params)))
+   </code></pre>
+<p>A <code>:method-allowed?</code> function is declared which restricts requests to using <code>POST</code> method only. The <code>post!</code> action prints the form parameters but would usually add the comment to the data-store. Since the purpose of the function is to cause a side-effect, it doesn't have to return anything. But in this case we want to return the comment identifier, so we return a map containing it which is merged with the context. Calls to subsequence decisions, actions and handlers will be able to lookup this comment identifier.</p>
+<p>When using <code>POST</code>, we can elect to return a <code>201</code> status indicating that the subordinate resource has been created Or we can redirect to the new resource using a 303 status with the location URI of the new resource set in the response header. We are going to redirect in this example, and the <code>:see-other</code> is a special entry we can supply in this situation which returns the location of the new resource- this gets returned as the value of the <code>Location</code> header in the response.</p>
+<p>We can test this resource again with curl :-</p>
+<pre><code>curl -i -X POST -d &#39;comment=Nice work!&#39; localhost:3000
+
+HTTP/1.1 303 See Other
+Location: http://localhost:3000/comments/1234
+Content-Length: 0</code></pre>
+<h2 id="creating-response-bodies">Creating response bodies</h2>
+<p>It is common for web frameworks to provide templating mini-languages which help in the construction of response bodies. One of the strengths of Clojure is the ease in which hierarchical data structures can be created using literal syntax. Clojure's Hiccup library is used to convert literal Clojure syntax into well-formed markup, ideal for generating XML documents if required. For JSON, there is the choice of the data.json library, or the Cheshire library (which we are using here). These libraries allow us to form the responses in Clojure and convert them to XML and JSON. This means that we can enjoy full access to all the features of the language instead of relying on the limited features of a templating language - and we aren't forced to learn yet another syntax.</p>
+<h2 id="uri-routing">URI routing</h2>
+<p>Neither Ring nor Liberator dictate the form of the URIs to resources (or web services). However, whether you use Ring or Liberator, you will want to use a routing library to dispatch calls based on URIs once you have mulitple Ring handlers in your application.</p>
+<p>Clojure has (at least) 2 very good routing libraries: Compojure and Moustache. Compojure provides a <code>defroutes</code> macro which allows multiple routes to be combined to form a single composite function which can be used as a Ring handler.</p>
+<p>Figure 8 shows how you could use Compojure to create a URI route to the Ring handler.</p>
+<p>Figure 8: &quot;Compojure routing&quot;</p>
+<pre><code>(ns rest-service.core
+  (:require [compojure.core :refer (GET defroutes)]))
+
+(defroutes my-routes
+  (GET &quot;/greeting/:name&quot; [name]
+       (fn [request] (format &quot;Hello %s!\n&quot; name))))
+
+(def app my-routes)</code></pre>
+<p>Compojure provides a mini-language for destructuring URIs into argument values which can be referenced by your Ring handlers. More details can be found at <a href="https://github.com/weavejester/compojure/wiki/Destructuring-Syntax">https://github.com/weavejester/compojure/wiki/Destructuring-Syntax</a>.</p>
+<p>Alternatively, Figure 9 shows what the code might look like using the Moustache routing library :-</p>
+<p>Figure 9: &quot;Moustaching routing&quot;</p>
+<pre><code>(ns rest-service.core
+  (:require [net.cgrand.moustache :as moustache]))
+
+(def app (moustache/app
+          [&quot;greeting&quot; name]
+          (fn [request]
+            {:body (format &quot;Hello %s!\n&quot; name)})))
+            </code></pre>
+<p>A guiding principle of REST is that hyperlinks are provided to help clients navigate through a graph of resources. RESTful web services should produce content containing URI links to other resources. Neither Ring nor Liberator dictate how these URIs should be formatted, this is left up to the developer, but this consideration will be an important part of your RESTful web service. Whether you use Compojure or Moustache for routing, you should think about how you are going to construct URIs that can be embedded in your responses in addition to defining the routes in your routing library.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This has been a brisk tour of Clojure web service basics. Clojure is an opininated language, and shares some of the principles found in REST. For instance, REST's separation between cacheable and non-cacheable methods resonates with Clojure's functional separation of immutable and mutable state. REST's emphasis on data representation as the primary artefact of communication (rather than procedure names and arguments) mirrors Clojure's emphasis on universal data structures over custom domain objects.</p>
+<p>But the best reason to use Clojure for web services is that the potential for rapid development and performance is matched by the software quality that stems from Clojure's carefully crafted design. At the end of the day, web services are only useful if they are reliable.</p>
+<h2 id="resources">Resources</h2>
+<ul>
+<li>Leingingen <a href="http://leiningen.org">http://leiningen.org</a></li>
+<li>Liberator <a href="http://clojure-liberator.github.com">http://clojure-liberator.github.com</a></li>
+<li>Compojure <a href="https://github.com/weavejester/compojure">https://github.com/weavejester/compojure</a></li>
+<li>Moustache <a href="https://github.com/cgrand/moustache">https://github.com/cgrand/moustache</a></li>
+<li>Jetty <a href="http://jetty.codehaus.org/jetty/">http://jetty.codehaus.org/jetty/</a></li>
+<li>Aleph <a href="https://github.com/ztellman/aleph">https://github.com/ztellman/aleph</a></li>
+<li>Heroku <a href="http://www.heroku.com">http://www.heroku.com</a></li>
+<li>Cheshire <a href="https://github.com/dakrone/cheshire">https://github.com/dakrone/cheshire</a></li>
+</ul>
+<h2 id="about-the-author">About the author</h2>
+<p>Malcolm Sparks (malcolm@juxt.pro) is a founder of JUXT, a collborative network of Clojure professionals providing Clojure training and services.</p>
+<p>With thanks to Stefan Tilkov of innoQ for helpful feedback, ideas and comments.</p>
+      </section>
+    </article>
+  </body>
+</html>
