@@ -22,19 +22,21 @@
   )
 
 (def date-formatter (tf/formatter "EEEE, d MMMM. HH:mm"))
+(def datetime-formatter (tf/formatter "EEEE, d MMMM."))
 
 (defn get-time [d]
   (.getTime d))
 
+(defn as-date [d tz]
+  (.print
+   ;; This is just a hack that works for our purposes.
+   (if (#{0 1 2} (.getHours d)) datetime-formatter date-formatter)
+   (LocalDateTime. (DateTime. d) (time/time-zone-for-id tz))))
+
 (defn render [ev]
   (str
    "<em>"
-   (as-> ev %
-         (:date %)
-         (DateTime. %)
-         (LocalDateTime. % (time/time-zone-for-id "Europe/London"))
-         (.print date-formatter %)
-         )
+   (as-date (:date ev) (or (:timezone ev) "Europe/London"))
    "</em>"
    (->> ev :description mp to-clj (map emit-element) dorun with-out-str)))
 
