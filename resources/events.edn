@@ -9,7 +9,7 @@
   :description "Jon Pither [speaks](http://www.spaconference.org/spa2013/sessions/session514.html) at [SPA 2013](http://www.spaconference.org/spa2013/)"}
 
  {:date #inst "2013-09-07T09:30+01:00"
-  :description "Adrian Mowat and Malcolm Sparks are running a one-off 1-day training course in Edinburgh, __Just £30 per ticket__. Tickets are selling fast and spaces are limited, so [sign up now](http://clojure-kickstart-scotland.eventbrite.co.uk/)."}
+  :description "Adrian Mowat and Malcolm Sparks are running a one-off 1-day training course in Edinburgh, __Just £30 per ticket__. Tickets are selling fast and spaces are limited, so [sign up now](http://clojure-launchpad-scotland.eventbrite.co.uk/)."}
 
  {:date #inst "2013-09-19T18:30+01:00"
   :description "London Java Community - ClojureFest - more details to follow soon!"}
