@@ -10,6 +10,8 @@ Static content is stored in another repository, and must be located under ```../
 
 ## Develop
 
+    lein up
+
 Run the site while you're editing. If you add the
 [Firefox Remote Control Add-on](https://addons.mozilla.org/en-us/firefox/addon/remote-control/)
 and start it on the default port (32000) then the browser will be

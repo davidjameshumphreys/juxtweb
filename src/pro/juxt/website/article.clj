@@ -16,6 +16,7 @@
    [clojure.zip :as zip]
    [clojure.edn :as edn]
    [clojure.data.zip :as dz]
+   [io.pedestal.service.interceptor :refer (defbefore defhandler)]
    [stencil.core :as stencil]
    [pro.juxt.website.util :refer (get-navbar markdown emit-element)]
    [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]))
@@ -83,7 +84,7 @@
               {:title (grab-title article)
                :path (str "/articles/" path)}))})))
 
-(defn article-handler [req]
+(defhandler article-handler [req]
   (let [path (get-in req [:path-params :path])
         sect (get-in req [:query-params :sect])]
     {:status 200
