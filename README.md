@@ -10,10 +10,10 @@ Static content is stored in another repository, and must be located under ```../
 
 ## Develop
 
-Run the site while you're editing. If you add the
-[Firefox Remote Control Add-on](https://addons.mozilla.org/en-us/firefox/addon/remote-control/)
-and start it on the default port (32000) then the browser will be
-updated whenever a resource file is modified.
+Development is via [Jig](https://github.com/juxt/jig).
+
+    $ lein repl
+    user> (go)
 
 ## Resources
 
@@ -75,7 +75,7 @@ For bigger articles, _chunking_ can be enabled via ```/resources/articles.edn```
 
 Once you are happy with changes, make sure you commit and push (the deploy script will check this for you).
 
-Ensure you have ssh access to the ```juxtweb``` user on ```juxt.pro```.
+Ensure you have SSH access to the ```juxtweb``` user on ```juxt.pro```.
 
 Run the deploy script :-
 
@@ -89,5 +89,5 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 ## Credits
 
-Built on [Up](https://github.com/malcolmsparks/up), an application
-platform for integrating application components, asynchronously.
+Built with [Jig](https://github.com/juxt/jig), a harness for developing
+and deploying modular Clojure applications.

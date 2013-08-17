@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
   <head>
     <title>Web services with Clojure</title>
   </head>
@@ -54,47 +55,96 @@
           breadth of features that surpass those offered within
           specialist web frameworks.
         </p>
-        <p>Once you are up to speed with Clojure, you'll enjoy a rapid, dynamic, responsive development cycle. Plus you'll benefit from the maturity and performance of the Java Virtual Machine. This article will show how Clojure's web services stack is built up, layer by layer.</p>
-<h2 id="ring">Ring</h2>
-<p>We'll start with Ring. Ring provides a bridge from web servers, which handle the low-level socket handling and data buffering tasks, to web applications, which handle the higher-level web requests and create the responses. It is this bridge that allows Clojure applications to be hosted, unchanged, on a variety of platforms including J2EE application servers, Jetty, netty (with aleph) not forgetting on-line hosting services such as Amazon's Beanstalk and Heroku.</p>
-<h2 id="come-hack-with-me">Come hack with me</h2>
-<p>Let's start by creating a Ring application. If you want to follow along and try these examples for yourself, you'll need the following setup :-</p>
-<ul>
-<li><p>A command shell.</p></li>
-<li><p>Java (version 1.6 or above). Either OpenJDK or Oracle's Java Standard Edition (available from <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>) will suffice.</p></li>
-<li><p>curl (or an equivalent, such as wget or httpie) for command-line testing</p></li>
-<li><p>Leiningen, version 2.0 or above.</p></li>
-</ul>
-<p>Leiningen is the <em>de facto</em> Clojure project tool and installation instructions can be found here: <a href="http://leiningen.org/">http://leiningen.org/</a></p>
-<p>Once you have the pre-requisites, start by creating a project using Leiningen.</p>
-<pre><code>$ lein new rest_service</code></pre>
-<p>This will create a directory <code>rest_service</code>, containing a file <code>project.clj</code>. You should first edit this file to add the various libraries we'll be using throughout this article - see Figure 1. Modify the <code>rest_service/core.clj</code> file as shown in Figure 2.</p>
-<p>Figure 1: &quot;The project.clj file&quot;</p>
-<pre><code>(defproject rest_service &quot;0.1.0&quot;
-  :description &quot;REST service examples&quot;
-  :url &quot;http://clojure-liberator.github.com&quot;
-  :license {:name &quot;Eclipse Public License&quot;
-            :url &quot;http://www.eclipse.org/legal/epl-v10.html&quot;}
+        <p>
+          Once you are up to speed with Clojure, you'll enjoy a rapid,
+          dynamic, responsive development cycle. Plus you'll benefit
+          from the maturity and performance of the Java Virtual
+          Machine. This article will show how Clojure's web services
+          stack is built up, layer by layer.
+        </p>
 
-  :plugins [[lein-ring &quot;0.8.3&quot;]]
+        <h2 id="ring">Ring</h2>
 
-  :ring {:handler rest-service.core/app}
+        <p>
+          We'll start with Ring. Ring provides a bridge from web
+          servers, which handle the low-level socket handling and data
+          buffering tasks, to web applications, which handle the
+          higher-level web requests and create the responses. It is this
+          bridge that allows Clojure applications to be hosted,
+          unchanged, on a variety of platforms including J2EE
+          application servers, Jetty, netty (with aleph) not forgetting
+          on-line hosting services such as Amazon's Beanstalk and
+          Heroku.
+        </p>
 
-  :dependencies [[org.clojure/clojure &quot;1.4.0&quot;]
-                 [ring/ring-jetty-adapter &quot;1.1.0&quot;]
-                 [compojure &quot;1.1.5&quot;]
-                 [cheshire &quot;5.0.2&quot;]
-                 [liberator &quot;0.8.0&quot;]])
-                 </code></pre>
-<p>Figure 2: &quot;A simple Ring handler&quot;</p>
-<pre><code>(ns rest-service.core)
+        <h2 id="come-hack-with-me">Come hack with me</h2>
 
-(defn app [request]
-  {:status 200
-   :headers {&quot;Content-Type&quot; &quot;text/html;charset=UTF-8&quot;}
-   :body &quot;&lt;h1&gt;Hello World!&lt;/h1&gt;\r\n&quot;})</code></pre>
-<p>Now test the service with the following command :-</p>
-<pre><code>$ lein ring server-headless</code></pre>
+        <p>
+          Let's start by creating a Ring application. If you want to
+          follow along and try these examples for yourself, you'll need
+          the following setup :-
+        </p>
+
+        <ul>
+          <li><p>A command shell.</p></li>
+
+          <li>
+            <p>
+              Java (version 1.6 or above). Either OpenJDK or Oracle's
+              Java Standard Edition (available from <a              href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">http://www.oracle.com/technetwork/java/javase/downloads/index.html</a>) will suffice.
+            </p>
+          </li>
+
+          <li>
+            <p>
+              curl (or an equivalent, such as wget or httpie) for
+              command-line testing
+            </p>
+          </li>
+
+          <li><p>Leiningen, version 2.0 or above.</p></li>
+        </ul>
+
+        <p>
+          Leiningen is the <em>de facto</em> Clojure project tool and
+          installation instructions can be found here: <a
+          href="http://leiningen.org/">http://leiningen.org/</a>
+        </p>
+
+        <p>
+          Once you have the pre-requisites, start by creating a project using Leiningen.
+        </p>
+
+        <pre><samp class="console">lein new rest_service</samp></pre>
+
+        <p>
+          This will create a directory <code>rest_service</code>,
+          containing a file <code>project.clj</code>. You should first
+          edit this file to add the various libraries we'll be using
+          throughout this article.
+        </p>
+
+        <figure>
+           {{#snippet}}project.clj.xi{{/snippet}}
+           <figcaption>The <code>project.clj</code> file</figcaption>
+        </figure>
+
+        <p>
+          Now modify the <code>rest_service/core.clj</code> file as
+          shown in Figure 2.
+        </p>
+
+        <figure>
+          {{#snippet}}core.clj.xi{{/snippet}}
+          <figcaption>The initial <code>core.clj</code> file</figcaption>
+        </figure>
+
+        <p>
+          Now test the service with the following command :-
+        </p>
+
+        <pre><samp class="console"><kbd>lein ring server-headless</kbd></samp></pre>
+
 <p>Point your browser to <a href="http://localhost:3000/">http://localhost:3000/</a> and you should see the usual greeting, <em>Hello World!</em>. Alternatively, use curl to test the service as follows :-</p>
 <pre><code>$ curl -i localhost:3000</code></pre>
 <p>You should get the following response :-</p>

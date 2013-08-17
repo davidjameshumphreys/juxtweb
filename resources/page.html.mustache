@@ -8,10 +8,10 @@
     <meta property="dc:title" content="JUXT"/>
     <meta property="dc:description" content="JUXT is a Clojure services company based in London."/>
 
-    <link href="/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
-    <link href="/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen"/>
+    <link href="{{ctx}}/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
+    <link href="{{ctx}}/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen"/>
 
-    <link rel="stylesheet" href="/css/juxt.css"/>
+    <link rel="stylesheet" href="{{ctx}}/css/juxt.css"/>
 
 <!--    <link href='https://fonts.googleapis.com/css?family=Monda:400,700' rel='stylesheet' type='text/css'> -->
 
@@ -25,14 +25,12 @@
     <div class="container-narrow">
 
       <div class="masthead">
-<!--
         <ul class="nav nav-pills pull-right">
           {{#navbar}}
           <li class="{{class}}"><a href="{{href}}">{{label}}</a></li>
           {{/navbar}}
         </ul>
         <h3 class="muted">JUXT</h3>
--->
       </div>
 
       {{{content}}}
@@ -42,15 +40,6 @@
         <p>&copy; JUXT 2013</p>
       </div>
     </div>
-
-<!--
-    <script src="/js/jquery-1.8.3.min.js"></script>
-    <script src="/js/jquery.backstretch.min.js"></script>
--->
-
-<!--
-    <script src="/js/juxt.js"></script>
--->
 
   </body>
 </html>

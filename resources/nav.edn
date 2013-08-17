@@ -1,4 +1,5 @@
 [
- {:label "Home" :href "/index.html"}
- {:label "Resources" :href "/resources/index.html"}
+ {:label "Home" :href :pro.juxt.website.core/index-page}
+ {:label "Blog" :href :pro.juxt.website.core/blog-page}
+ {:label "Resources" :href :pro.juxt.website.core/resource-index-page}
  ]
