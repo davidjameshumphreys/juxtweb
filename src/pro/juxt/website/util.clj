@@ -15,9 +15,18 @@
    [clojure.java.io :refer (resource)]
    [clojure.edn :as edn]))
 
-(defn get-navbar [active]
+(defmulti as-href (fn [o url-for] (class o)))
+
+(defmethod as-href clojure.lang.Keyword [k url-for]
+  (url-for k))
+
+(defmethod as-href String [s url-for] s)
+
+(defn get-navbar [url-for active]
   (->> "nav.edn" resource slurp edn/read-string
-       (map #(assoc % :class (if (= active (:label %)) "active" "")))))
+       (map #(assoc %
+               :class (if (= active (:label %)) "active" "")
+               :href (as-href (:href %) url-for)))))
 
 (defn emit-element
   ;; An alternative emit-element that doesn't cause newlines to be

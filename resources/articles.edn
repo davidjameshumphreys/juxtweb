@@ -3,10 +3,10 @@
   :author "Malcolm Sparks"
   :publication-date #inst "2013-07-12T17:00+01:00"
   :chunked true}
- #_{:path "articles/remote-nrepl.html"
+ {:path "articles/remote-nrepl.html"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-08-12T17:00+01:00"}
- #_{:path "articles/web-services-with-clojure.html"
+ {:path "articles/web-services-with-clojure.html"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-08-01T17:00+01:00"}
 ]

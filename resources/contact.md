@@ -1,6 +1,6 @@
 ### Get in touch
 
-We enjoy receiving e-mails, phone calls and tweets.
+We like to receive e-mails, phone calls and tweets.
 
 <span class="lsf-icon" title="phone"/>Call Malcolm on 077205 38719 or Jon on 077733 51861
 

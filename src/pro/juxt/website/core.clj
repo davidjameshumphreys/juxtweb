@@ -11,14 +11,16 @@
 
 (ns pro.juxt.website.core
   (:require
+   jig
+   [jig.web.app :refer (add-routes)]
    [pro.juxt.website
     [article :refer (get-articles article-handler)]
     [blog :refer (get-blog-articles)]]
    [ring.util.response :refer (redirect) :as ring-resp]
+   [ring.middleware.file :as file]
    [clojure.java.io :refer (resource)]
    [stencil.core :as stencil]
-   [io.pedestal.service.interceptor :refer (defbefore defhandler)]
-   [io.pedestal.service.impl.interceptor :refer (interceptor)]
+   [io.pedestal.service.interceptor :as interceptor :refer (defbefore defhandler definterceptorfn interceptor)]
    [io.pedestal.service.http :as bootstrap]
    [io.pedestal.service.http.ring-middlewares :as middlewares]
    [io.pedestal.service.http.body-params :as body-params]
@@ -28,72 +30,77 @@
    [clojure.java.io :as io]
    [clojure.zip :as zip]
    [clojure.data.zip :as dz]
+   [clojure.tools.logging :refer :all]
+   [ring.util.codec :as codec]
    [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]
    [pro.juxt.website
     [util :refer (emit-element get-navbar markdown)]
     [events :refer (get-events)]])
   (:import (jig Lifecycle)))
 
-;; TODO: Only do this for dev, not for prod.
+(defn page-response [context active-nav content]
+  (assoc context :response
+         (ring-resp/response
+          (stencil/render-file
+           "page.html"
+           {:ctx (let [ctx (get-in context [:app :jig.web/context])]
+                   (if (= ctx "/") "" ctx))
+            :navbar (get-navbar (:url-for context) active-nav)
+            :content (constantly content)}))))
 
-;; TODO Don't do ANY caching at all
-(stencil.loader/set-cache (clojure.core.cache/ttl-cache-factory {} :ttl 0))
+(defbefore index-page [context]
+  (page-response
+   context "Home"
+   (stencil/render-file
+    "index.html" {:markdown markdown :events get-events})))
 
-(defhandler index-page [request]
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body (stencil/render-file
-          "page.html"
-          {:navbar (get-navbar "Home")
-           :content (->> {:markdown markdown
-                          :events get-events}
-                         (stencil/render-file "index.html")
-                         constantly)})})
+(defbefore blog-page [context]
+  (page-response
+   context "Blog"
+   (stencil/render-file
+    "blog.html" {:markdown markdown :articles (get-blog-articles)})))
 
-(defhandler blog-page [request]
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body (stencil/render-file
-          "page.html"
-          {:navbar (get-navbar "Blog")
-           :content (->> {:markdown markdown
-                          :articles (get-blog-articles)}
-                         (stencil/render-file "blog.html")
-                         constantly)})})
 
-(defhandler resource-index-page [request]
-  {:status 200
-   :headers {"Content-Type" "text/html"}
-   :body (stencil/render-file
-          "page.html"
-          {:navbar (get-navbar "Resources")
-           :content (->> {:markdown markdown
-                          :articles (get-articles)}
-                         (stencil/render-file "resources-index.html")
-                         constantly)})})
+(defbefore resource-index-page [context]
+  (page-response
+   context "Resources"
+   (stencil/render-file
+    "resources-index.html" {:markdown markdown :articles (get-articles)})))
 
 (defbefore root-page
-  [{:keys [request system url-for] :as context}]
+  [{:keys [url-for] :as context}]
   (assoc context :response
          (ring-resp/redirect (url-for ::index-page))))
+
+(definterceptorfn static
+  [root-path & [opts]]
+  (interceptor/handler
+   ::static
+   (fn [req]
+     (infof "Request for static is %s" req)
+     (ring-resp/file-response
+      (codec/url-decode (get-in req [:path-params :static]))
+      {:root root-path, :index-files? true, :allow-symlinks? false}))))
 
 ;; Jig component
 (deftype Component [config]
   Lifecycle
   (init [_ system]
-    system
-    (update-in system [(:jig.web/app-name config) :jig.web/routes]
-               conj [
-                     ["/" {:get root-page} ^:interceptors
-                      [(body-params/body-params)
-                       bootstrap/html-body]]
-                     ["/index.html" {:get index-page} ^:interceptors
-                      [(body-params/body-params)
-                       bootstrap/html-body]]
-                     ["/blog.html" {:get blog-page}]
-                     ["/resources/index.html" {:get resource-index-page}]
-                     ["/articles/*path" {:get article-handler}]
-                     ["/*static" {:get (middlewares/file (:static-path config))}]
-                     ]))
-  (start [_ system] system)
+    (add-routes
+     system config
+     [^:interceptors [(body-params/body-params)
+                      bootstrap/html-body]
+      ["/" {:get root-page}]
+      ["/index.html" {:get index-page}]
+      ["/blog.html" {:get blog-page}]
+      ["/resources/index.html" {:get resource-index-page}]
+      ["/articles/*path" {:get article-handler}]
+      ["/*static" {:get (static (:static-path config))}]
+      ]))
+
+  (start [_ system]
+    (let [cache (clojure.core.cache/lru-cache-factory {})]
+      (stencil.loader/set-cache cache)
+      (assoc system :stencil-cache cache)))
+
   (stop [_ system] system))
