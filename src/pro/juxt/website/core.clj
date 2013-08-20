@@ -88,14 +88,19 @@
   (init [_ system]
     (add-routes
      system config
-     [^:interceptors [(body-params/body-params)
-                      bootstrap/html-body]
-      ["/" {:get root-page}]
+     [
+
+      ;;^:interceptors
+      #_[(body-params/body-params)
+       bootstrap/html-body]
+
+
+      ;;      ["/" {:get root-page}]
       ["/index.html" {:get index-page}]
-      ["/blog.html" {:get blog-page}]
-      ["/resources/index.html" {:get resource-index-page}]
-      ["/articles/*path" {:get article-handler}]
-      ["/*static" {:get (static (:static-path config))}]
+      ;;      ["/blog.html" {:get blog-page}]
+      ;;      ["/resources/index.html" {:get resource-index-page}]
+      ;;      ["/articles/*path" {:get article-handler}]
+      ;;      ["/*static" {:get (static (:static-path config))}]
       ]))
 
   (start [_ system]
