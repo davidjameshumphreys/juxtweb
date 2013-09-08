@@ -71,8 +71,17 @@
                     (create-link (inc sectno) (first b))
                     ])))))
 
+(defn compute-label-map [content tag]
+  (->> content
+       xml-seq
+       (filter #(= (:tag %) tag))
+       (map-indexed #(vector (get-in %2 [:attrs :id]) (inc %1)))
+       (into {})))
+
 (defn create-article-html-body [{:keys [url-for]} path sect]
-  (let [article (parse-article (str "articles/" path))]
+  (let [article (parse-article (str "articles/" path))
+        refs (merge
+              (compute-label-map article :figure))]
     (stencil/render-file
      "page.html"
      {:navbar (get-navbar url-for nil)
@@ -88,7 +97,8 @@
                :path (str "/articles/" path)
                :snippet #(if-let [res (io/resource (format "articles/%s/%s" (second (first (re-seq #"(.*).html" path))) %))]
                            (hiccup/html [:pre [:samp (hiccup/h (slurp res))]])
-                           (format "(Resource not found: %s)" %))}))})))
+                           (format "(Resource not found: %s)" %))
+               :ref #(format "Figure %s" (refs %))}))})))
 
 
 (defbefore article-handler [context]
