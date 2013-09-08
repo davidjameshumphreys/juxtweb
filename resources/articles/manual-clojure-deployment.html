@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Manual Clojure Deployment</title>
+  </head>
+  <body>
+    <article>
+      <header>
+        <hgroup>
+          <h1>
+            {{title}}
+          </h1>
+        </hgroup>
+        <aside class="abstract">
+          <p>
+            Good engineers are always striving to understand <em>how
+            things work</em>.
+          </p>
+          <p>
+            This article combines a tutorial for deploying a Clojure
+            application with a commentary explaining the rationale for
+            the choices made. The aim is to give developers who have
+            little or no Unix experience a chance to learn by example
+            one way that engineers at JUXT have successfully deployed
+            and supported Clojure applications.
+          </p>
+          <p>
+            An abridged version of this article will be published in the
+            Open Source Journal, Autumn/Winter 2013.
+          </p>
+        </aside>
+      </header>
+      <section>
+        <h1>
+          Introduction
+        </h1>
+        <p>
+          Understanding how things work is a pre-requisite to fixing
+          them. An open system gives engineers the freedom to discover
+          important details and forge a deep understanding which can
+          give them the insights necessary to diagnose and troubleshoot
+          unexpected problems (the most common variety!).
+        </p>
+        <p>
+          Some systems, like a bicycle for instance, are easy to
+          understand because they don't try to hide their workings. You
+          can understand how a bicycle works by watching someone ride
+          one!
+        </p>
+        <figure>
+          <img src="/img/bicycle.png"/>
+          <figcaption>A bicycle is a good example of an <em>evident
+          system</em>. It is obvious how it works just by watching
+          someone riding one.</figcaption>
+        </figure>
+        <p>
+          The opposite is a 'black box', a system that obscures how it
+          works, either deliberately or as a trade-off to optimise
+          performance.
+        </p>
+        <p>
+          The purpose of this article is to explain, in detail, a set of
+          steps for deploying a Clojure application into production. To
+          that end, we ignore the existence of 'cloud' deployment
+          technologies and other deployment automation tools. It is
+          crucial to understand a process prior to automating it. We
+          will cover deployment automation tools in a future article.
+        </p>
+        <p>
+          When deploying Clojure applications there are many options
+          available, leading to thousands of possible combinations. This
+          article describes just one combination—one reflecting a single
+          set of decisions—yet one we believe has certain
+          advantages. Therefore, we'll attempt to explain the rationale
+          behind our choices. Of course, you are welcome to disagree in
+          the comments!
+        </p>
+        <aside>
+          <h2>Spoiler alert!</h2>
+          <p>
+            We'll be using <em>git</em> to deploy our Clojure
+            application onto a fresh <em>Arch Linux</em> system and
+            using <em>Leiningen</em> to launch it. It will be harden the
+            service with <em>nginx</em>.
+          </p>
+        </aside>
+        <h2>Conventions</h2>
+        <p>
+          Most of the steps in this article will use the <dfn>command
+          line</dfn>.
+        </p>
+        <p>
+          If you run Windows<sup>®</sup>, we suggest you install <a
+          href="http://cygwin.com/install.html"><dfn>Cygwin</dfn></a> or
+          <a           href="http://www.chiark.greenend.org.uk/~sgtatham/putty/"><dfn>PuTTY</dfn></a>
+          which will provide a UNIX-like command prompt. For Mac OS X,
+          use the <samp>Terminal</samp> application or an equivalent.
+        </p>
+        <p>
+          We'll show what needs to be typed by displaying the console
+          prompt and cursor like this :-
+        </p>
+        <pre><samp class="local"><kbd>ls -l</kbd></samp></pre>
+        <p>
+          The prompt in our examples (e.g. <kbd>local$</kbd>) will
+          confirm whether the command is intended for your local machine
+          or the production host. Take care to type (or paste) the
+          commands on the correct machine. Usually, no harm will come if
+          you make a mistake—otherwise we will explicitly warn you.
+        </p>
+        <!--
+            <div class="warning">
+            <img width="32" src="/img/warning.svg"></img>
+            </div>
+        -->
+        <h2>The example application</h2>
+        <p>
+          For the purposes of this article we need an example, and we'll
+          be using our own <a
+          href="https://github.com/juxt/juxt-accounting"><dfn>JUXT
+          Accounting</dfn></a> application. Feel free to replace this
+          with a Clojure application of your choice. The only
+          requirements are :-
+        </p>
+        <ol>
+          <li>that the application can be launched with <a
+          href="http://leiningen.org"><dfn>Leiningen</dfn></a>;</li>
+          <li>and that the source code is in a <dfn>git</dfn> repository.</li>
+        </ol>
+<!--
+        <p>
+          If you want to use our example rather than your own, clone the example's repository :-
+        </p>
+        <pre><samp class="local"><kbd>git clone https://github.com/juxt/juxt-accounting.git</kbd></samp></pre>
+        <p>and change directory.</p>
+        <pre><samp class="local"><kbd>cd juxt-accounting</kbd></samp></pre>
+-->
+      </section> <!-- 8/10 -->
+
+      <section>
+        <h1>Creating a security key</h1>
+        <aside>
+          <p>
+            We'll be covering <dfn><abbr>SSH</abbr></dfn> in this
+            section. If you already have an <abbr>SSH</abbr> key set up,
+            <a href="#creating-a-host">skip this section</a>.
+          </p>
+        </aside>
+        <p>
+          How shall we start? With security. We should do our utmost to
+          ensure that access to our systems is restricted to trusted
+          identities. One way we can do this is by placing locks on our
+          resources, restricting access to those with a matching key.
+        </p>
+        <p>
+          First we'll create a key for our own use, using a popular
+          cryptographic system common amoung Unix systems known as <a
+          href="http://www.openssh.org">OpenSSH</a>.
+        </p>
+<!--
+        <p>
+            If someone is able to make a copy of this key, they'll be
+            able to access your host, so it's critically important to
+            encrypt the key with passphrase (a long password). Good
+            security is a combination of something you have (in this
+            case, your key) with something you know (in this case, your
+            passphrase).</p>
+
+        <p>
+          Securing access to the production host is achieved by
+          holding a secret key. If someone is able to make a copy of
+          this key, they'll be able to access your host, so it's a
+          good idea to encrypt the key with <dfn>passphrase</dfn> (a
+          long password). Good security is a combination of something
+          you <em>have</em> (in this case, your key) with something
+          you <em>know</em> (in this case, your passphrase).
+        </p>
+-->
+        <p>
+          We create the keypair using the <kbd>ssh-keygen</kbd> command :-
+        </p>
+        <pre><samp class="local"><kbd>ssh-keygen -t rsa</kbd></samp></pre>
+
+        <p>The <kbd>-t</kbd> option specifies that RSA should be used
+        for the key algorithm, the default size being 2048 bits which
+        should be sufficient.</p>
+
+        <aside>
+          <p>
+            I tend to trust RSA rather than DSA, as the US National
+            Security Agency was heavily involved in the design of DSA,
+            and it's prudent to avoid it for that reason only.</p><!-- needs link -->
+        </aside>
+
+        <p>You should see the following message :-</p>
+
+        <pre><samp>Generating public/private rsa key pair.</samp></pre>
+
+        <p>The first prompt asks you where to save the key</p>
+
+        <pre><samp>Enter file in which to save the key (/home/bob/.ssh/id_rsa):</samp></pre>
+
+        <p>You should accept the default unless you already have a key
+        saved in this location.</p>
+
+        <p>The next prompt asks you to enter a passphrase :-</p>
+
+        <pre><samp>Enter passphrase (empty for no passphrase):</samp></pre>
+
+
+        <p>You should enter a long passphrase that is <a
+        href="#">difficult to guess</a><!-- TODO Add Bruce Schneier
+        password tips -->. If someone is able to make a copy of this
+        key, they'll be able to access everything you have access to, so
+        it's essential to encrypt the key with <dfn>passphrase</dfn> (a
+        long password). Good security is a combination of something you
+        <em>have</em> (in this case, your key) with something you
+        <em>know</em> (in this case, your passphrase).</p>
+
+        <aside>
+          <p>Some people use empty passphrases to make it easier to run
+          automated scripts. This is bad practice. You should never
+          sacrifice the security of your default SSH key for a little
+          convenience. There are alternative ways of writing scripts
+          that can inherit your secure session credentials by running an
+          agent (<b>ssh-agent</b>)</p>
+          <p>Don't worry if your passphrase is cumbersome to
+          type. Should you need to, you can change the passphrase at any
+          time using the <kbd>-p</kbd> option.</p>
+
+          <pre><samp class="local"><kbd>ssh-keygen -p -P old-passphrase -N new-passphrase</kbd></samp></pre>
+
+        </aside>
+
+        <p>
+          After re-entering your passphrase your key will be generated.
+        </p>
+
+        <pre><samp>Your identification has been saved in /home/bob/.ssh/id_rsa.
+Your public key has been saved in /home/bob/.ssh/id_rsa.pub.
+The key fingerprint is:
+3c:44:66:07:ce:71:0e:17:97:ef:c6:48:e9:e3:93:47 malcolm@thinkpad
+The key's randomart image is:
++--[ RSA 2048]----+
+|        B.=...   |
+|       * B ..    |
+|        + .  o   |
+|       o    o .  |
+|        S  o +   |
+|         .  + E  |
+|           . =   |
+|            + .  |
+|             o   |
++-----------------+
+</samp></pre>
+
+      </section>
+      <section>
+        <h1 id="creating-a-host">Creating a server</h1>
+        <aside>
+          <p>
+            There are numerous combinations of hosting provider and
+            operating system that are available. For this article we'll
+            select <dfn><a href="https://www.archlinux.org/">Arch
+            Linux</a></dfn>. Let's take a moment to explain why.
+          </p>
+          <p>
+            We've already decided to write our application in Clojure,
+            for some excellent reasons—as <a
+            href="http://www.infoq.com/presentations/Evident-Code-at-Scale">Stu
+            Halloway explains</a>, Clojure is a language that
+            <q>clearly expresses its meaning and purpose</q>. This and
+            other Clojure principles are matched by those in <a
+            href="https://wiki.archlinux.org/index.php/The_Arch_Way">The
+            Arch Way</a>, a document which describes the philosophy of
+            the Arch Linux distribution.
+          </p>
+          <pre style="background: inherit; color: black">
+            ev·i·dent
+            /ˈevədənt/
+            Adjective
+            Plain or obvious; clearly seen or understood.
+            Synonyms
+            obvious - apparent - manifest - patent - plain - clear
+          </pre>
+          <p>
+            We will leave a fuller discussion of the similarities in
+            design between Clojure and Arch for another time, but for
+            now simply recommend striving for simplicity in every part
+            of the overall system. While there are other excellent
+            choices, Arch represents a good balance between purity and
+            pragmatism, and an excellent OS partner for a rock-solid
+            Clojure deployment.
+          </p>
+          <p>
+            We'll now explain how to create a new host running <dfn>Arch
+            Linux</dfn>, hosted by Digital Ocean (please use <a
+            href="https://www.digitalocean.com/?refcode=dd60185a0dc4">this
+            link</a> and you'll be supporting us!), and use the coupon
+            code <samp>VPSERS10</samp> to get $10 free credit, which
+            will plenty complete to this tutorial.
+          </p>
+          <p>
+            Of course, you can use any hosting provider you
+            like. However, the rest of this article is written for Arch
+            Linux and Digital Ocean provides a quick and relatively
+            inexpensive way of getting a host (which Digital Ocean call
+            a <dfn>droplet</dfn>) created with Arch Linux installed.
+          </p>
+          <p>
+            Be warned, however, that choosing Arch Linux involves a
+            commitment to long-term learning rather than the quick-fix
+            of a black-box. But we believe this investment greatly
+            pays off in the long-term and, as with Clojure, learning
+            can be greatly rewarding, and fun! And if you've never
+            experienced Arch Linux before, here's a great opportunity
+            to try it!
+          </p>
+
+        </aside>
+        <p>
+          First, go to <a
+          href="https://www.digitalocean.com/">https://www.digitalocean.com/</a>
+          and create an account.
+        </p>
+        <p>
+          Once your account has been successfully created and you are
+          logged in, go to the <a
+          href="https://www.digitalocean.com/ssh_keys">SSH Keys
+          tab</a>.
+        </p>
+
+        <figure>
+          <img src="/img/do-ssh.png"/>
+          <figcaption>The <samp>SSH Keys</samp> tab of your Digital
+          Ocean account.</figcaption>
+        </figure>
+
+        <p>
+          Now you'll need the content of the public part of your SSH key :-
+        </p>
+
+        <pre><samp class="local"><kbd>cat ~/.ssh/id_rsa.pub</kbd></samp></pre>
+
+        <p>You should see some output like this :-</p>
+
+        <pre><samp><small>ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDjYle0uCq8Xf4JuoCoDbWUDarY++86sHBr+yZkxEgKWkK9fOsTlvOGERlBP++TUqSuieelbheme9kK4wXXhFYWdLtZtCa/3u8hz5R1C99bFdllkyQi/6NO4pe293wCUZRSrd55ERKVO2Gk24RsUgcLKInzSyEmf17Tv3SIKfigw8Td36F2bQzKzStyxI4lrCIhbm+w96rwK5nPD2HJbBY0VPc3WV56taLi14Eto8BmByzYD/EoyXDgBDAWAkMTrFYLM6yOtIEjc3uqW+/oAeJJkjMAyK8wM3xq8ZDwZoV709uMuN4X6Cb49l5ZPy9TQfKErykp9kFgEcw1XgINtlqR malcolm@juxt.pro</small></samp></pre>
+
+        <p>
+          Copy and paste the text of your public key from the console
+          into the web form, give the key any name you like, and click
+          <kbd>CREATE SSH KEY</kbd>.
+        </p>
+
+        <p>
+          Now go to the <a
+          href="https://www.digitalocean.com/ssh_keys">droplets</a>
+          tab and click on <kbd>Create Droplet</kbd>. This takes you
+          to a page containing a web form where you can select the
+          size of a new virtual host. At the time of writing the
+          smallest available is 512MB/1 CPU with 20GB of disk. That
+          will suffice for a Clojure web application but you can
+          choose a bigger (more expensive) configuration if you wish.
+        </p>
+        <p>
+          Next choose your region. Then, under <kbd><samp>Select
+          Image</samp></kbd> (ensure the <samp>Linux
+          Distributions</samp> tab is selected), choose <kbd><samp>Arch
+          Linux</samp></kbd> and select the 64-bit version.  Finally,
+          select the SSH key you added and submit the form to create the
+          new virtual host. The resulting table will tell you its
+          IP address.
+        </p>
+        <h2>
+          Pointing a domain name at the IP address
+        </h2>
+        <p>
+          Your domain registrar will have a DNS control panel where you
+          can add an entry to register a host in your domain to the IP
+          address associated with the host. Now is a good time to add an
+          entry, since it may take a few hours to propagate across the
+          Internet's DNS servers. In this article we'll use
+          <samp>prod.juxt.pro</samp> as the hostname, replace this with
+          your host-name in the instructions coming up.
+        </p>
+
+
+        <h2>
+          Accessing the host
+        </h2>
+        <p>
+          Test that you can login into the new host :-
+        </p>
+        <pre><samp class="local"><kbd>ssh prod.juxt.pro</kbd></samp></pre>
+        <p>
+          You should see the following message :-
+        </p>
+        <pre><samp><small>The authenticity of host 'prod.juxt.pro (82.196.7.118)' can't be established.
+ECDSA key fingerprint is 5d:8c:b2:e7:3b:b3:13:f4:3d:d4:db:c2:2c:5d:df:d1.
+Are you sure you want to continue connecting (yes/no)?</small></samp></pre>
+        <aside>
+          When you confirm with <kbd>yes</kbd>, a <dfn>host-key</dfn> is
+          cached in the <samp>$HOME/.ssh/known_hosts</samp> file. If the
+          remote host signature changes, for example, if the IP address
+          changes (perhaps due to DNS poisoning), you will be warned and
+          asked to confirm again. This measure is to address
+          <dfn>man-in-the-middle</dfn> attacks.
+        </aside>
+        <p>
+          Type <kbd>yes</kbd> and you should see a console prompt.
+        </p>
+        <pre><samp class="prodroot"><kbd></kbd></samp></pre>
+        <p>
+          From now on, this console prompt indicates which machine which
+          host to type commands into, and the <samp>#</samp> suffix
+          indicates, by convention, that you are logged in as the
+          <kbd>root</kbd> user.
+        </p>
+        <p>
+          Now that everything is ready, let's deploy!
+        </p>
+      </section>
+
+      <section>
+        <h1>Adding system dependencies</h1>
+          <p>
+            With Arch, we add software by <em>syncing</em> our system
+            with on-line Arch repositories which contain the latest
+            software packages.
+          </p>
+          <aside>
+            <p>
+              It's also possible to build these packages from source but
+              it's easier to use the binary packages others have
+              built. We can trust these packages since they are signed
+              by trusted Arch developers.
+            </p>
+          <p>
+            Unlike most Linux distributions, Arch Linux defaults to
+            having only a minimal set of software packages installed and
+            few services running. We start off with a small core, and
+            build on it as we need to. This approach often leads to a
+            smaller, simpler, faster and more secure system. Installing
+            packages on Arch is very easy and fast.
+          </p>
+        </aside>
+
+        <p>
+          First, we must update the indexes on our machine so it knows
+          which packages are available.
+        </p>
+
+        <pre><samp class="prodroot"><kbd>pacman -Sy</kbd></samp></pre>
+
+        <p>Now we'll need to install Java (because Clojure applications
+        run on the Java Virtual Machine) and git which we'll use to sync
+        our Clojure application source code.</p>
+
+        <pre><samp class="prodroot"><kbd>pacman -S jdk7-openjdk git</kbd></samp></pre>
+
+      </section>
+      <section>
+        <h1>
+          Creating an application account
+        </h1>
+        <p>
+          We will create an application account that the Clojure
+          application will run under. This is safer than running
+          applications under the root account. For this example we'll create the user <samp>juxt</samp>.
+        </p>
+        <pre><samp class="prodroot"><kbd>useradd -mr juxt</kbd></samp></pre>
+        <pre><samp class="prodroot"><kbd>chmod 755 /home/juxt</kbd></samp></pre>
+        <aside>
+          <p>
+            The <samp>-m</samp> option ensures that home directory
+            <samp>/home/juxt</samp> is created and populated. The
+            <samp>-r</samp> option indicates this is a system account.
+            If you want to serve resources under this account using
+            nginx (a reverse-proxy web server covered later), it's
+            important that the directory permissions of
+            <samp>/home/juxt</samp> are set to <samp>755</samp>.
+          </p>
+        </aside>
+        <h2>
+          Installing Leiningen
+        </h2>
+        <aside>
+          <p>
+            While it is possible to install Leiningen system-wide via an
+            Arch package, there are valid reasons to install a version
+            of Leiningen in each application account.
+          </p>
+        </aside>
+        <pre><samp class="prodroot"><kbd>su - juxt</kbd></samp></pre>
+        <pre><samp class="prodacct"><kbd>mkdir bin</kbd></samp></pre>
+        <pre><samp class="prodacct"><kbd>curl https://raw.github.com/technomancy/leiningen/stable/bin/lein -o bin/lein</kbd></samp></pre>
+        <p>Set the executable bit on the file, so we can execute it</p>
+        <pre><samp class="prodacct"><kbd>chmod +x bin/lein</kbd></samp></pre>
+        <p>
+          So that we can type <kbd>lein</kbd> without giving the full
+          path we can put the <samp>bin</samp> directory in the
+          <samp>PATH</samp> of the <samp>juxt</samp> user.
+        </p>
+        <pre><samp class="prodacct"><kbd>echo 'PATH=$HOME/bin:$PATH' &gt;&gt; .bashrc</kbd></samp></pre>
+        <p>
+          Log out with exit
+        </p>
+        <pre><samp class="prodacct"><kbd>exit</kbd></samp></pre>
+        <p>
+          Log back in to the application account.
+        </p>
+        <pre><samp class="prodroot"><kbd>su - juxt</kbd></samp></pre>
+      </section>
+
+      <section>
+        <h1>
+          Setting up the application
+        </h1>
+        <h2>
+          Installing the application
+        </h2>
+        <p>
+          We'll clone the source code repository of the application onto
+          the production machine.
+        </p>
+        <pre><samp class="prodacct"><kbd>git clone https//github.com/juxt/juxt-accounting</kbd></samp></pre>
+        <h2>
+          Running the application
+        </h2>
+        <p>
+          Running the application is simply a matter of changing directory
+        </p>
+        <pre><samp class="prodacct"><kbd>cd juxt-accounting</kbd></samp></pre>
+        <p>
+          and using <samp>lein</samp> to launch it.
+        </p>
+        <pre><samp class="prodacct"><kbd>lein run</kbd></samp></pre>
+        <p>
+          Ensure that the application starts correctly before shutting down with <kbd>Control-C</kbd>.
+        </p>
+        <h2>
+          Upgrading the application
+        </h2>
+        <p>
+          When a newer version of the application is available, we can
+          perform an upgrade like this:-
+        </p>
+        <pre><samp class="prodacct"><kbd>git pull</kbd></samp></pre>
+      </section>
+      <section>
+        <h1>
+          Using tmux
+        </h1>
+        <p>
+          If we run the application on the command line, it will finish
+          when we log out. This isn't what we want in a deployment. One
+          alternative is to run the application in <dfn>tmux</dfn>.
+        </p>
+        <pre><samp class="prodacct"><kbd>pacman -S tmux</kbd></samp></pre>
+        <p>
+          Now run tmux without any arguments.
+        </p>
+        <pre><samp class="prodacct"><kbd>tmux</kbd></samp></pre>
+        <p>
+          For a demonstration we'll run the application's REPL.
+        </p>
+        <pre><samp class="tmux"><kbd>lein repl</kbd></samp></pre>
+        <p>
+          <q>Detach</q> from <samp>tmux</samp> by entering the key comination
+          of <kbd>Control-b Control-d</kbd>.
+        </p>
+        <p>
+          Now you can safely exit the shell without stopping the application.
+        </p>
+        <pre><samp class="prodacct"><kbd>exit</kbd></samp></pre>
+        <p>
+          To test this, log back into the host.
+        </p>
+        <pre><samp class="local"><kbd>ssh prod.juxt.pro</kbd></samp></pre>
+        <p>
+          Now attach to the tmux session.
+        </p>
+        <pre><samp class="prodacct"><kbd>tmux attach</kbd></samp></pre>
+        <p>
+          You should go right back into the REPL session.
+        </p>
+        <p>
+          Detach from <samp>tmux</samp> again (<kbd>Control-b Control-d</kbd>).
+        </p>
+      </section>
+
+      <section>
+        <h1>Configuring systemd </h1>
+        <p>
+          While it's possible to run applications within a
+          <samp>tmux</samp> session, a more robust way is to treat your
+          application as a service and let Arch manage it for you, the
+          same way it manages all other services running on the
+          machine. You can even configure the application to restart if
+          the host ever gets rebooted.
+        </p>
+        <p>
+          Arch uses <dfn>systemd</dfn> to manage its services, which is
+          the system that almost all distributions of Linux are using
+          already, or planning to migrate to.
+          <!-- Citation required -->
+        </p>
+        <p>
+          As root, create a file called <samp>juxt-accounting.service</samp> in
+          the <samp>/etc/systemd/system</samp> directory.
+        </p>
+        <pre><samp class="prodroot"><kbd>vi /etc/systemd/system/juxt-accounting.service</kbd></samp></pre>
+        <p>
+          Add the following content :-
+        </p>
+        <pre><samp>[Unit]
+Description=JUXT Accounting
+
+[Service]
+Type=simple
+ExecStart=/home/juxt/bin/lein trampoline run
+Restart=always
+User=juxt
+WorkingDirectory=/home/juxt/juxt-accounting
+
+[Install]
+WantedBy=multi-user.target</samp></pre>
+        <p>
+          Start the service with
+        </p>
+        <pre><samp class="prodroot"><kbd>systemctl start juxt-accounting</kbd></samp></pre>
+        <p>
+          Also, configure the service so that it's restarted on reboot,
+        </p>
+        <pre><samp class="prodroot"><kbd>systemctl enable juxt-accounting</kbd></samp></pre>
+        <aside>
+          <p>
+            The above configuration runs the command line
+            <samp>/home/juxt/bin/lein trampoline run</samp>. This
+            exploits a feature in Leiningen called <dfn>trampoline</dfn>
+            mode, without which using Leiningen would require two JVMs,
+            one for Leiningen itself and one for the application is
+            launches.
+          </p>
+        </aside>
+        <p>
+          If you've got this far, well done, you have a working Clojure
+          deployment. You could announce your application to the world -
+          but first we recommend a few improvements which are covered in
+          the remaining sections.
+        </p>
+      </section>
+
+<!--
+      <section>
+        <h1>
+          Configuring a reverse proxy
+        </h1>
+        <aside>
+          <p>
+            For a production web service, it's a good idea to install and
+            configure a <dfn>reverse proxy</dfn>. A reverse proxy is
+            useful for many reasons but here are the most important :-
+          </p>
+          <ul>
+            <li>
+              TLS (SSL)—the reverse-proxy can negotiate secure
+              connections with your clients so you don't have to add
+              this functionality to your Clojure application.
+            </li>
+            <li>
+              Servicing thousands of slow connections—a reverse-proxy
+              can help your application scale, by spoon-feeding content
+              to slower clients (perhaps over mobile networks) leaving
+              your Clojure application to run at full speed.
+            </li>
+            <li>
+              Serving static content—a reverse proxy can efficient serve
+              static files such as images, taking away load from your
+              application.
+            </li>
+          </ul>
+        </aside>
+        <p>
+          In this section we will install and configure <dfn>nginx</dfn>. Installing it is easy :-
+        </p>
+        <pre><samp class="prodroot"><kbd>pacman -S nginx</kbd></samp></pre>
+-->
+
+<!--
+        <h2>Configuration</h2>
+
+Before we start nginx, we need to make the directory where it will cache resources.
+
+```
+prod# mkdir -p /var/cache/nginx/www.example.com
+```
+
+Now enable and start nginx so that Arch manages it.
+
+```
+prod# systemctl enable osj-app
+prod# systemctl start osj-app
+```
+
+You'll now be able to access your application over HTTPS: ```https://www.example.com```.
+-->
+
+<!--
+      </section>
+-->
+
+<!--
+      <section>
+        <h1>Configuring a firewall</h1>
+        <ul>
+          <li>Configure iptables</li>
+        </ul>
+      </section>
+
+      <section>
+        <h1>Configuring monitoring</h1>
+      </section>
+-->
+
+      <section id="wrap-up">
+        <!-- Move this -->
+        <h1>Wrap up</h1>
+        <p>There is still a list of things that we can do to improve our deployment.</p>
+        <ul>
+          <li>Install and configure a reverse proxy, such as nginx</li>
+          <li>Install a firewall. See <a href="https://wiki.archlinux.org/index.php/Iptables">iptables</a>.</li>
+          <li>Configure monitoring in case of application failure.</li>
+          <li>Automate future deployments with <a href="http://www.palletops.com">Pallet</a>.</li>
+        </ul>
+        <p>
+          In due course we will add material to this article to cover
+          these are more topics. In the meantime, the <a
+          href="https://www.archlinux.org">Arch Wiki</a> is an
+          invaluable resource for how to configure additional
+          components.
+        </p>
+      </section>
+    </article>
+  </body>
+</html>

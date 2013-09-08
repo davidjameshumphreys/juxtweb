@@ -1,5 +1,5 @@
 [
- {:path "articles/simple-clojure-deployment.html"
+ {:path "articles/manual-clojure-deployment.html"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-07-12T17:00+01:00"
   :chunked true}

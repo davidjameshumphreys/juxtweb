@@ -12,10 +12,13 @@
 (ns pro.juxt.website.article
   (:require
    [clojure.java.io :as io :refer (resource)]
+   [clojure.tools.logging :refer :all]
    [clojure.xml :as xml]
    [clojure.zip :as zip]
    [clojure.edn :as edn]
+   [clojure.walk :as walk]
    [clojure.data.zip :as dz]
+   [hiccup.core :as hiccup]
    [io.pedestal.service.interceptor :refer (defbefore defhandler)]
    [stencil.core :as stencil]
    [pro.juxt.website.util :refer (get-navbar markdown emit-element)]
@@ -68,11 +71,11 @@
                     (create-link (inc sectno) (first b))
                     ])))))
 
-(defn create-article-html-body [path sect]
+(defn create-article-html-body [{:keys [url-for]} path sect]
   (let [article (parse-article (str "articles/" path))]
     (stencil/render-file
      "page.html"
-     {:navbar (get-navbar nil)
+     {:navbar (get-navbar url-for nil)
       :markdown markdown
       :content
       (fn [] (stencil/render-string
@@ -82,14 +85,19 @@
                   (wrap-in-div "container-narrow")
                   emit-element with-out-str)
               {:title (grab-title article)
-               :path (str "/articles/" path)}))})))
+               :path (str "/articles/" path)
+               :snippet #(if-let [res (io/resource (format "articles/%s/%s" (second (first (re-seq #"(.*).html" path))) %))]
+                           (hiccup/html [:pre [:samp (hiccup/h (slurp res))]])
+                           (format "(Resource not found: %s)" %))}))})))
 
-(defhandler article-handler [req]
-  (let [path (get-in req [:path-params :path])
-        sect (get-in req [:query-params :sect])]
-    {:status 200
-     :headers {"Content-Type" "text/html"}
-     :body (create-article-html-body path (if sect (Integer/parseInt sect) 0))}))
+
+(defbefore article-handler [context]
+  (assoc context :response
+         (let [path (get-in context [:request :path-params :path])
+               sect (get-in context [:request :query-params :sect])]
+           {:status 200
+            :headers {"Content-Type" "text/html"}
+            :body (create-article-html-body context path (if sect (Integer/parseInt sect) 0))})))
 
 (defn get-articles []
   (for [article (edn/read-string (slurp (resource "articles.edn")))]
