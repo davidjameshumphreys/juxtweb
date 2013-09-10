@@ -47,7 +47,7 @@
   :description "Jon Pither joined a [panel discussion](http://www.meetup.com/Functional-Media/events/127416512) hosted by the BBC about Functional Programming in media organisations."}
 
  {:date #inst "2013-09-13T13:15+01:00"
-  :description "Malcolm is speaking at SoftWire"}
+  :description "Malcolm is speaking at [SoftWire](http://www.softwire.com)"}
 
  {:date #inst "2013-09-24"
   :description "Malcolm is speaking at a functional media event organised by ITV television"}
