@@ -1,0 +1,15 @@
+(ns rest-service.core
+  (:require [liberator.core :refer (resource)]
+            [cheshire.core :refer (generate-string)]))
+
+(def app
+  (resource
+   :available-media-types ["application/json"
+                           "application/edn"
+                           "text/plain"]
+   :handle-ok (fn [ctx]
+                (case (get-in ctx [:representation :media-type])
+                  "application/json" (generate-string "You want JSON")
+                  "application/edn" "You prefer edn\n"
+                  "text/plain" "You prefer plain text\n"
+                  ))))

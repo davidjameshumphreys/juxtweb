@@ -1,0 +1,10 @@
+(ns rest-service.core
+  (:require [ring.middleware.head :refer (wrap-head)]))
+
+(def app
+  (->
+   (fn [request]
+     {:status 200
+      :headers {"Content-Type" "text/html;charset=UTF-8"}
+      :body "<h1>Hello World</h1>\r\n"})
+   (wrap-head)))

@@ -1,0 +1,5 @@
+HTTP/1.1 406 Not Acceptable
+Content-Type: text/plain;charset=ISO-8859-1
+Content-Length: 33
+
+No acceptable resource available.

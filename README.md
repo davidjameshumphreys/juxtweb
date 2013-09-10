@@ -79,7 +79,12 @@ Ensure you have SSH access to the ```juxtweb``` user on ```juxt.pro```.
 
 Run the deploy script :-
 
+
     bin/deploy
+
+The server is started under Jig, with the following incantation.
+
+    lein with-profile "dev" run -m user/go
 
 ## License
 

@@ -1,0 +1,155 @@
+
+
+        <h2>Yesterday's assumptions</h2>
+        <p>
+          Today, many Clojure applications inherit a distribution model
+          from their J2EE ancestry that involves distributable archives
+          (jars, wars) containing application assets and
+          dependencies. Yesterday's assumptions, however, do not
+          necessarily hold today.
+        </p>
+        <p>
+          Firstly, unlike Java, Clojure is distributable as
+          source. While it is possible to compile Clojure to class files
+          <em>ahead of time</em>, there usually isn't much of a benefit
+          in doing so. (Many people feel, as I do, that AOT just isn't
+          worth the hassle.)
+        </p>
+        <p>
+          Secondly, deployment processes in J2EE were established long
+          before the emergence of a <i>de facto</i> dependency
+          management system based on Maven repositories. In the absence
+          of another way of retrieving dependencies, there was no
+          alternative but to distribute an app's dependencies along with
+          the app. This assumption no longer holds. Dependency
+          resolution is built on a mature and reliable infrastructure of
+          highly available Maven repository servers, client libraries
+          and checksums.
+        </p>
+        <p>
+          Thirdly, git presents an alternative way of creating, and
+          distributing, a snapshot of a directory tree. Before git, a
+          version tag of a source-code repository would be meaningful
+          only within the domain of the repository, so the only way of
+          creating a snapshot of a directory tree that could be
+          distributed was to make a copy of it inside an
+          archive. Distributed version control systems bring a more
+          elegant approach to the problem of freezing a directory
+          tree. Tags can be used to reliably recreate a source tree. A
+          git tag can be digitally signed, and the immutability of the
+          commit it relates is guarenteed against corruption by
+          cryptographic hash chains.
+        </p>
+        <p>
+          Finally, Leiningen has evolved to become a mature and reliable
+          way of launching a Clojure system from its source tree.
+        </p>
+        <h2>Thinking the unthinkable</h2>
+        <p>
+          The combination of all these developments raises the
+          intriguing possibility of <em>removing the build step
+          altogether</em>.
+        </p>
+        <blockquote>
+          <q>The cheapest, fastest, and most reliable components are
+          those that aren’t there.</q>
+          <cite>Gordon Bell</cite>
+        </blockquote>
+        <p>
+          It has become something of a <i>sacred cow</i> among software
+          developers that all projects should maintain at least a build
+          system, or better still, a continuous integration system.
+        </p>
+        <!-- Worse, CI is now enshrined as a mandatory step in some
+             organizations - putting an unnecessary obstacle in the way
+             of progress. -->
+        <p>
+          The typical build system, however, interleaves two functions
+          which might be better separated :-
+        </p>
+        <ol>
+          <li>Checking for errors;</li>
+          <li>The creation of a deriative form more suitable for execution</li>
+        </ol>
+        <p>
+          By the same token, <q>continuous integration</q> complects
+          testing the quality of an artifact with its generation.
+        </p>
+        <p>
+          Checking for errors (and ensuring quality) is definitely
+          something we want to keep!
+        </p>
+        <p>
+          But why are we so attached to the generation of artifacts?
+          There are considerable advantages in making the distributable
+          unit as close as we can to the source code itself. It is
+          better for those engineers testing or supporting a system to
+          be working on essentially <em>the same thing</em> as the
+          developers who are going to be fixing the bugs they find. Of
+          course, this benefit is often sacrificed for the sake of
+          performance. So developers work with the original source code
+          while support engineers work with something very different (a
+          set of binary artifacts).
+        </p>
+        <h2>Conclusion: Reordering the process</h2>
+        <p>
+          Software development processes are typically arranged around
+          the bulid system.
+        </p>
+        <p>
+          Develop -> Build -> Test -> Deploy
+        </p>
+        <p>
+          But Clojure developers, thanks to the pervasiveness of Git and
+          Leiningen in the Clojure world, have the opportunity to tinker
+          with the traditional pipeline. Here's an arguably more agile
+          approach :-
+        </p>
+        <p>
+          Deploy -> Develop -> Test
+        </p>
+        <p>
+          We'll be exploring these opportunities further in future articles.
+
+          <!-- Expand this thesis to explain about the value of
+               deploy-first - talk about remote nrepl driven
+               development.
+          -->
+
+          <!-- This is a 'step up' - a degree of sophistication made
+               possible by the years of development of the JVM, HotSpot,
+               Clojure. -->
+
+          <!-- What are the trade-offs?  1. potentially more complexity
+               in the runtime, in order to build artefacts - each
+               Markdown processors
+          -->
+
+          <!-- 'evident' code - propagate this through to deployment -
+               go back to the ike analogy -->
+
+          <!-- 'travelling light' - going camping to a camp-site that
+               has a shop for essentials you might have forgotten -
+               means planning is less critical, mistakes can be made in
+               the planning process - 'bugs' can be found and fixed - XP
+               is predicated on the cost-of-change-curve being flat, but
+               monolithic CI is not the only way to flatten it -->
+
+          <!-- instead of investing in the CI system, invest in creating
+               automation around the testing of what the users actually
+               do, not some abstract analog in the form of unit
+               tests. There is a place for unit-tests, see
+               test-generative - but having them only gives you
+               confidence in the functions you are writing, and often
+               gives a false sense of security that the system will do
+               what the user requires - the user is king, not the build
+               system - we seem to be slaves to the CI, which distracts
+               focus away from the key target: the user. 'Start-ups' who
+               focus on the user, are seen as cowboys because they
+               emphasise on feature delivery over unit testing. -->
+
+          <!-- people refer to Leiningen as a build system - if it is
+               then it's one of the worst build tools I've ever used -
+               no where near as good as Make - Leiningen is a 'system
+               launch tool' -->
+        </p>

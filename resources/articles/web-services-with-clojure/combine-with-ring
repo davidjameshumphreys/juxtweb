@@ -1,0 +1,29 @@
+(ns rest-service.core (:require
+        [liberator.core :refer (resource)] [cheshire.core :refer
+        (generate-string)]) (:import (liberator.representation
+        MapRepresentation)))
+
+(defn wrap-json-response
+  "Wrap response in json if content negotiation demands it."
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (if (re-matches #"application/json;?.*"
+                      (or (get-in response [:headers "Content-Type"])
+                          ""))
+        (update-in response [:body] generate-string {:pretty true})
+        response))))
+
+(def app
+  (-> (resource
+       :available-media-types ["application/json"
+                               "application/edn"
+                               "text/plain"]
+       :handle-ok (fn [ctx]
+                    (case (get-in ctx [:representation :media-type])
+                      "application/json" (MapRepresentation.
+                                          {:message "You picked JSON"})
+                      "application/edn" "You picked edn\n"
+                      "text/plain" "You picked plain text\n"
+                      )))
+      (wrap-json-response)))

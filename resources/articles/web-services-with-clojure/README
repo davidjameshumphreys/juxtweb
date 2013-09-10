@@ -1,1 +1,4 @@
-.xi suffix to ensure that Stuart's refresh doesn't pick this up - I'm sure this must be a bug because resources shouldn't contain code.
+The .include suffix is to ensure that Stuart Sierra's refresh doesn't
+pick this up and try to compile it - by default it scans all dirs in the
+classpath (not just source directories). One reason for this is that
+Leiningen information is not available to the runtimes it spawns.

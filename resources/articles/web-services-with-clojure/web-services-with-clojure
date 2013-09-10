@@ -1,0 +1,12 @@
+  /home/malcolm/Dropbox/JUXT/juxtweb/resources/articles/web-services-with-clojure:
+  total used in directory 32 available 40041972
+  drwxr-xr-x 1 malcolm malcolm 166 Sep  9 18:32 .
+  drwxr-xr-x 1 malcolm malcolm 276 Sep  9 18:32 ..
+  -rw-r--r-- 1 malcolm malcolm 278 Sep  8 14:40 README
+  -rw-r--r-- 1 malcolm malcolm 152 Sep  6 16:39 core.clj.include
+  -rw-r--r-- 1 malcolm malcolm 181 Sep  9 18:32 exists
+  -rw-r--r-- 1 malcolm malcolm  72 Sep  8 16:56 head
+  -rw-r--r-- 1 malcolm malcolm 100 Sep  8 14:41 hello-world
+  -rw-r--r-- 1 malcolm malcolm 508 Sep  8 13:38 project.clj.include
+  -rw-r--r-- 1 malcolm malcolm 244 Sep  8 14:47 using-wrap-head
+  -rw-r--r-- 1 malcolm malcolm 317 Sep  8 14:43 wrap-head

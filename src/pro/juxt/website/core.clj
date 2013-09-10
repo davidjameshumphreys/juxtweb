@@ -15,7 +15,9 @@
    [jig.web.app :refer (add-routes)]
    [pro.juxt.website
     [article :refer (get-articles article-handler)]
-    [blog :refer (get-blog-articles)]]
+    [blog :refer (get-blog-articles)]
+    [feeds :refer (feed-handler)]
+    [pretty :refer (ppxml)]]
    [ring.util.response :refer (redirect) :as ring-resp]
    [ring.middleware.file :as file]
    [clojure.java.io :refer (resource)]
@@ -41,12 +43,13 @@
 (defn page-response [context active-nav content]
   (assoc context :response
          (ring-resp/response
-          (stencil/render-file
-           "page.html"
-           {:ctx (let [ctx (get-in context [:app :jig.web/context])]
-                   (if (= ctx "/") "" ctx))
-            :navbar (get-navbar (:url-for context) active-nav)
-            :content (constantly content)}))))
+          (ppxml
+           (stencil/render-file
+            "page.html"
+            {:ctx (let [ctx (get-in context [:app :jig.web/context])]
+                    (if (= ctx "/") "" ctx))
+             :navbar (get-navbar (:url-for context) active-nav)
+             :content (constantly content)})))))
 
 (defbefore index-page [context]
   (page-response
@@ -94,6 +97,7 @@
       ["/blog.html" {:get blog-page}]
       ["/resources/index.html" {:get resource-index-page}]
       ["/articles/*path" {:get article-handler}]
+      ["/feeds/*feed" {:get feed-handler}]
       ["/*static" {:get (static (:static-path config))}]
       ]))
 
