@@ -36,10 +36,11 @@
 (defn render [ev]
   (str
    "<div>"
+   (when (:title ev) (format "<h5>%s</h5>" (:title ev)))
    "<em>"
    (as-date (:date ev) (or (:timezone ev) "Europe/London"))
    "</em>"
-   (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\"/></div>" (:image ev)))
+   (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\" alt=\"%s\"/></div>" (:image ev) (:title ev)))
    (->> ev :description mp to-clj (map emit-element) dorun with-out-str)
    "<hr/>"
    "</div>"))
