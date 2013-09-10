@@ -36,7 +36,7 @@
  {:title "London Clojure Exchange 2013"
   :date #inst "2013-12-06"
   :description "Meet us at the third annual London [Clojure eXchange](http://skillsmatter.com/event/scala/clojure-exchange-2013)."
-  :image "clojureexchange.jpeg"}
+  :image "clojureexchange2.jpeg"}
 
  {:date #inst "2013-07-29"
   :description "Jon Pither joined a panel discussion hosted by the BBC about Functional Programming in media organisations."}
