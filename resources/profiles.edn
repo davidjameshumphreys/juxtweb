@@ -4,7 +4,18 @@
 He has led a team of Clojure developers in an investment bank, where he was also the founder of the Functional Programming SIG.
 
 He is an experienced trainer, having given over 30 courses on Agile development and Test Driven Development with Java, C# and C++."
-  :image "malcolm.jpg"}
+  :image "malcolm.jpg"
+  :links [{:url "http://blog.malcolmsparks.com"}
+          {:url "https://github.com/malcolmsparks"}]}
+ {:name "Jon Pither"
+  :links [{:url "http://www.pitheringabout.com" :title "www.pitheringabout.com"}
+          {:url "https://github.com/jonpither" :title "GitHub"}]
+  :bio "Jon Pither jointly introduced Clojure to a large investment bank where he led a team of developers on a large mission-critical Clojure project.
+
+He is now leading a rewrite of one of the worlds biggest newspaper websites in Clojure.
+
+He is an active speaker and trainer in the language."
+  :image "jon.jpg"}
  {:name "Håkan Råberg"
   :bio "Håkan Råberg has programmed professionally for over 15 years and unprofessionally close to 30.
 
@@ -12,12 +23,6 @@ He has plied his trade across the globe in Sweden, London, Bangalore and San Fra
 
 Today he works as an independent consultant in The City of London.
 He's the author of shen.clj and Enumerable.java."
+  :links [{:url "https://github.com/hraberg" :title "GitHub"}]
   :image "hakan.jpeg"}
- {:name "Jon Pither"
-  :bio "Jon Pither jointly introduced Clojure to a large investment bank where he led a team of developers on a large mission-critical Clojure project.
-
-He is now leading a rewrite of one of the worlds biggest newspaper websites in Clojure.
-
-He is an active speaker and trainer in the language."
-  :image "jon.jpg"}
  ]

@@ -1,6 +1,6 @@
 ### About us
 
-__JUXT__ is network of experienced IT professionals who specialise in the Clojure programming language.
+__JUXT__ is network of experienced IT professionals who specialise in the Clojure programming language coming together to form a software consultancy.
 
 We have particular expertise in:
 
