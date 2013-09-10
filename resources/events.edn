@@ -26,7 +26,10 @@
 "}
 
  {:date #inst "2013-10-14"
-  :description "Meet us at [EuroClojure 2013](http://euroclojure.com/2013/)!"}
+  :description "Meet Malcolm, Hakan and Jon at [EuroClojure 2013](http://euroclojure.com/2013/)!"}
+
+ {:date #inst "2013-10-14"
+  :description "Jon Pither [speaks at EuroClojure 2013 - Newspaper Massacre](http://euroclojure.com/2013/programme/#Newspaper_Massacre)!"}
 
  {:date #inst "2013-12-06"
   :description "Meet us at the third annual London [Clojure eXchange](http://skillsmatter.com/event/scala/clojure-exchange-2013)."}
