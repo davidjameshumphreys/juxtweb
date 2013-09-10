@@ -40,7 +40,7 @@
    "<em>"
    (as-date (:date ev) (or (:timezone ev) "Europe/London"))
    "</em>"
-   (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\" alt=\"%s\"/></div>" (:image ev) (:title ev)))
+   (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\" alt=\"%s\"/></div><p style=\"clear:both\"/>" (:image ev) (:title ev)))
    (->> ev :description mp to-clj (map emit-element) dorun with-out-str)
    "<hr/>"
    "</div>"))
