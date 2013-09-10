@@ -41,7 +41,7 @@
   :image "clojureexchange.jpeg"}
 
  {:date #inst "2013-07-29"
-  :description "Jon Pither joined a panel discussion hosted by the BBC about Functional Programming in media organisations."}
+  :description "Jon Pither joined a [panel discussion](http://www.meetup.com/Functional-Media/events/127416512) hosted by the BBC about Functional Programming in media organisations."}
 
 
 
