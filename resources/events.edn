@@ -11,7 +11,9 @@
  {:date #inst "2013-09-07T09:30+01:00"
   :description "Adrian Mowat and Malcolm Sparks ran a well-received 1-day training course in Edinburgh."}
 
- {:date #inst "2013-09-19T18:30+01:00"
+ {:title "London Java Community"
+  :image "ljc.jpg"
+  :date #inst "2013-09-19T18:30+01:00"
   :description "London Java Community - ClojureFest - more details to follow soon!"}
 
  {:date #inst "2013-10-01T18:30+01:00"
@@ -39,7 +41,7 @@
   :image "clojureexchange2.jpeg"}
 
  {:date #inst "2013-07-29"
-  :description "Jon Pither joined a panel discussion hosted by the BBC about Functional Programming in media organisations."}
+  :description "Jon Pither joined a [panel discussion](http://www.meetup.com/Functional-Media/events/127416512) hosted by the BBC about Functional Programming in media organisations."}
 
 
 
