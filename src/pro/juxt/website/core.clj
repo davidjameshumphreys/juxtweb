@@ -58,6 +58,12 @@
    (stencil/render-file
     "index.html" {:markdown markdown :events get-events :profiles get-profiles})))
 
+(defbefore clients-page [context]
+  (page-response
+   context "Clients"
+   (stencil/render-file
+    "clients.html" {:markdown markdown})))
+
 (defbefore blog-page [context]
   (page-response
    context "Blog"
@@ -96,6 +102,7 @@
       ["/" {:get root-page}]
       ["/index.html" {:get index-page}]
       ["/blog.html" {:get blog-page}]
+      ["/clients.html" {:get clients-page}]
       ["/resources/index.html" {:get resource-index-page}]
       ["/articles/*path" {:get article-handler}]
       ["/feeds/*feed" {:get feed-handler}]
