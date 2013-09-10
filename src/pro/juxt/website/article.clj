@@ -27,14 +27,9 @@
 (defn parse-article [path]
   (some->> path resource io/input-stream xml/parse))
 
-(defn grab-title [article]
-  (some->> article xml-seq (filter (comp (partial = :title) :tag)) first :content first))
-
 (defn grab-abstract [article]
   (xml1-> (zip/xml-zip article)
        dz/descendants :aside (attr= :class "abstract") zip/node))
-
-(def article-title (comp grab-title parse-article))
 
 (defn wrap-in-div [el class]
   {:tag :div :attrs {:class class} :content [el]})
@@ -78,41 +73,55 @@
        (map-indexed #(vector (get-in %2 [:attrs :id]) (inc %1)))
        (into {})))
 
-(defn create-article-html-body [{:keys [url-for]} path sect]
+(defn create-article-html-body [{:keys [url-for]} path sect {:keys [title id] :as metadata}]
   (let [article (parse-article (str "articles/" path))
-        refs (merge
-              (compute-label-map article :figure))]
+        refs (merge (compute-label-map article :figure))]
     (stencil/render-file
      "page.html"
      {:navbar (get-navbar url-for nil)
       :markdown markdown
       :content
-      (fn [] (stencil/render-string
-              (-> (some->> article xml-seq
-                           (filter #(= (:tag %) :article)) first)
-                  (extract-section sect)
-                  (wrap-in-div "container-narrow")
-                  emit-element with-out-str)
-              {:title (grab-title article)
-               :path (str "/articles/" path)
-               :snippet #(if-let [res (io/resource (format "articles/%s/%s" (second (first (re-seq #"(.*).html" path))) %))]
-                           (hiccup/html [:pre [:samp (hiccup/h (slurp res))]])
-                           (format "(Resource not found: %s)" %))
-               :ref #(format "Figure %s" (refs %))}))})))
-
+      (constantly
+       (stencil/render-file
+        "article.html"
+        {:article (fn [] (stencil/render-string
+                          (-> (some->> article xml-seq
+                                       (filter #(= (:tag %) :article)) first)
+                              (extract-section sect)
+                              (wrap-in-div "container-narrow")
+                              emit-element with-out-str)
+                          {:title title
+                           :path (str "/articles/" path)
+                           :snippet #(if-let [res (io/resource (format "articles/%s/%s" (second (first (re-seq #"(.*).html" path))) %))]
+                                       (hiccup/html [:pre [:samp (hiccup/h (slurp res))]])
+                                       (format "(Resource not found: %s)" %))
+                           :ref #(format "Figure %s" (refs %))}))
+         :comments (fn [] (stencil/render-file
+                           "disqus.html"
+                           {:disqus
+                            [{:varname "shortname" :value "juxtpro"}
+                             {:varname "identifier" :value id}
+                             ;; We use the prod link (juxt.pro) so that
+                             ;; our test versions also show prod
+                             ;; comments (to get an idea of how the page
+                             ;; is looking)
+                             {:varname "url"
+                              :value (str "https://juxt.pro"
+                                          (url-for ::article-handler :params {:path path}))}
+                             {:varname "title" :value title}]}))}))})))
 
 (defbefore article-handler [context]
   (assoc context :response
          (let [path (get-in context [:request :path-params :path])
-               sect (get-in context [:request :query-params :sect])]
+               sect (get-in context [:request :query-params :sect])
+               metadata (->> "articles.edn" resource slurp edn/read-string (filter #(= (:path %) (str "articles/" path))) first)]
            {:status 200
             :headers {"Content-Type" "text/html"}
-            :body (create-article-html-body context path (if sect (Integer/parseInt sect) 0))})))
+            :body (create-article-html-body context path (if sect (Integer/parseInt sect) 0) metadata)})))
 
 (defn get-articles []
   (for [article (edn/read-string (slurp (resource "articles.edn")))]
     (let [a (parse-article (:path article))]
       (assoc article
-        :title (grab-title a)
         :toc (when (:chunked article) (toc a))
         :abstract (with-out-str (emit-element (grab-abstract a)))))))

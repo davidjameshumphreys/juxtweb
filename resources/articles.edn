@@ -1,12 +1,20 @@
 [
- {:path "articles/manual-clojure-deployment.html"
+ {:title "Manual Clojure Deployment"
+  :path "articles/manual-clojure-deployment.html"
+  :id "dc14597b-4789-480e-a7e5-c4407f53dcf3"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-07-12T17:00+01:00"
   :chunked true}
- {:path "articles/remote-nrepl.html"
+
+ {:title "Remote development with nREPL"
+  :path "articles/remote-nrepl.html"
+  :id "6e7d35dd-b150-45e7-884f-1afea020f535"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-08-12T17:00+01:00"}
- {:path "articles/web-services-with-clojure.html"
+
+ {:title "Web services with Clojure"
+  :path "articles/web-services-with-clojure.html"
+  :id "e5c93cd1-b8b1-4016-bef2-1bd075564c74"
   :author "Malcolm Sparks"
   :publication-date #inst "2013-08-01T17:00+01:00"
   :chunked true}
