@@ -41,6 +41,7 @@
    "</em>"
    (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\"/></div>" (:image ev)))
    (->> ev :description mp to-clj (map emit-element) dorun with-out-str)
+   "<hr/>"
    "</div>"))
 
 (defn get-events [content]
