@@ -17,16 +17,15 @@
  {:date #inst "2013-10-01T18:30+01:00"
   :description "London Clojurians Dojo - James Adams and Malcolm Sparks will talk about how they build and deployed an HTML5 multi-user game in Clojure with web-sockets and Datomic. More details to follow or [contact Malcolm directly](mailto:malcolm@juxt.pro?subject=Clojure-Dojo-Event-1st-October)."}
 
- {:date #inst "2013-09-26T09:30+01:00"
-  :description "Our __September 2-day ['Fast-track to Clojure' training course](http://skillsmatter.com/course/scala/fast-track-to-clojure)__ - [contact us](mailto:malcolm@juxt.pro?subject=Clojure-course-enquiry) for booking details\n\n* Location: The Skills Matter eXchange, London\n* Price: £1165.00 + VAT
-"}
-
  {:date #inst "2013-12-04T09:30+00:00"
   :description "Our __December 2-day ['Fast-track to Clojure' training course](http://skillsmatter.com/course/scala/fast-track-to-clojure)__ - [contact us](mailto:malcolm@juxt.pro?subject=Clojure-course-enquiry) for booking details\n\n* Location: The Skills Matter eXchange, London\n* Price: £1165.00 + VAT
-"}
+"
+  :image "skillsmatter.jpeg"
+}
 
  {:date #inst "2013-10-14"
-  :description "Meet Malcolm, Hakan and Jon at [EuroClojure 2013](http://euroclojure.com/2013/)!"}
+  :description "Meet Malcolm, Hakan and Jon at [EuroClojure 2013](http://euroclojure.com/2013/)!"
+  :image "euroclojure.jpg"}
 
  {:date #inst "2013-10-14"
   :description "Jon Pither [speaks at EuroClojure 2013 - Newspaper Massacre](http://euroclojure.com/2013/programme/#Newspaper_Massacre)!"}

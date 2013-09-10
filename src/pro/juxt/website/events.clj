@@ -35,10 +35,13 @@
 
 (defn render [ev]
   (str
+   "<div>"
    "<em>"
    (as-date (:date ev) (or (:timezone ev) "Europe/London"))
    "</em>"
-   (->> ev :description mp to-clj (map emit-element) dorun with-out-str)))
+   (when (:image ev) (format "<div class=\"span11\"><img src=\"/img/%s\"/></div>" (:image ev)))
+   (->> ev :description mp to-clj (map emit-element) dorun with-out-str)
+   "</div>"))
 
 (defn get-events [content]
   (let [now (.getTime (java.util.Date.))
