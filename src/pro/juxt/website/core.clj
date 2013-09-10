@@ -37,7 +37,8 @@
    [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]
    [pro.juxt.website
     [util :refer (emit-element get-navbar markdown)]
-    [events :refer (get-events)]])
+    [events :refer (get-events)]
+    [profiles :refer (get-profiles)]])
   (:import (jig Lifecycle)))
 
 (defn page-response [context active-nav content]
@@ -55,7 +56,7 @@
   (page-response
    context "Home"
    (stencil/render-file
-    "index.html" {:markdown markdown :events get-events})))
+    "index.html" {:markdown markdown :events get-events :profiles get-profiles})))
 
 (defbefore blog-page [context]
   (page-response
