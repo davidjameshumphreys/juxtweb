@@ -43,13 +43,11 @@
         </p>
         <p>
           Some systems, like a bicycle for instance, are easy to
-          understand because they don't try to hide their workings. You
-          can understand how a bicycle works by watching someone ride
-          one!
+          understand because they don't try to hide their workings.
         </p>
-        <figure>
+        <figure id="fig-bicycle">
           <img src="/img/bicycle.png"/>
-          <figcaption>A bicycle is a good example of an <em>evident
+          <figcaption>{{#ref}}fig-bicycle{{/ref}}: A bicycle is a good example of an <em>evident
           system</em>. It is obvious how it works just by watching
           someone riding one.</figcaption>
         </figure>
@@ -80,7 +78,7 @@
           <p>
             We'll be using <em>git</em> to deploy our Clojure
             application onto a fresh <em>Arch Linux</em> system and
-            using <em>Leiningen</em> to launch it. It will be harden the
+            using <em>Leiningen</em> to launch it. We will front the
             service with <em>nginx</em>.
           </p>
         </aside>
@@ -275,14 +273,20 @@ The key's randomart image is:
             Arch Way</a>, a document which describes the philosophy of
             the Arch Linux distribution.
           </p>
-          <pre style="background: inherit; color: black">
-            ev·i·dent
-            /ˈevədənt/
-            Adjective
-            Plain or obvious; clearly seen or understood.
-            Synonyms
-            obvious - apparent - manifest - patent - plain - clear
-          </pre>
+          <div style="margin-left: 3em; margin-right: 3em; border: 1px dotted #aaa; background: white">
+            <p>
+              <span style="font-size: 180%; font-weight: bold">ev·i·dent</span><br/>
+              <span style="font-size: 120%">/ˈevədənt/</span><br/>
+            </p>
+            <p>
+              <span style="font-style: italic">Adjective</span><br/>
+              <span style="font-size: 160%">Plain or obvious; clearly seen or understood.</span><br/>
+            </p>
+            <p>
+              <span style="">Synonyms</span><br/>
+              obvious - apparent - manifest - patent - plain - clear<br/>
+            </p>
+          </div>
           <p>
             We will leave a fuller discussion of the similarities in
             design between Clojure and Arch for another time, but for
@@ -296,9 +300,10 @@ The key's randomart image is:
             We'll now explain how to create a new host running <dfn>Arch
             Linux</dfn>, hosted by Digital Ocean (please use <a
             href="https://www.digitalocean.com/?refcode=dd60185a0dc4">this
-            link</a> and you'll be supporting us!), and use the coupon
-            code <samp>VPSERS10</samp> to get $10 free credit, which
-            will plenty complete to this tutorial.
+            link</a> and Digial Ocean will give us some free credit
+            too!), and use the coupon code <samp>VPSERS10</samp> to get
+            $10 free credit, which will plenty complete to this
+            tutorial.
           </p>
           <p>
             Of course, you can use any hosting provider you

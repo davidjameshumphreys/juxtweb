@@ -1,0 +1,9 @@
+:exists? true
+
+:exists? (constantly false)
+
+:exists? (.exists (io/file "foo.txt"))
+
+:exists? (fn [ctx]
+           (let [f (io/file "foo.txt")]
+             [(.exists f) {:file f}]))

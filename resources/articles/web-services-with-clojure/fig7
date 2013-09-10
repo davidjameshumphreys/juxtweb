@@ -1,0 +1,17 @@
+(ns rest-service.core (:require [liberator.core
+        :refer (resource)] [ring.middleware.params :refer
+        (wrap-params)]))
+
+(def app
+  (-> (resource
+       :method-allowed? #(#{:post}
+                          (get-in % [:request :request-method]))
+       :available-media-types ["*"]
+       :post! (fn [ctx]
+                (println (get-in ctx [:request :form-params]))
+                ;; Insert into a data-store, return the id.
+                {:comment-id 1234})
+       :post-redirect? true
+       :see-other #(format "http://localhost:3000/comments/%s"
+                     (:comment-id %)))
+      (wrap-params)))
