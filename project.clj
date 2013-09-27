@@ -11,40 +11,74 @@
 
 (require '(clojure [string :refer (join)]
                    [edn :as edn])
-         '(clojure.java [shell :refer (sh)]))
+         '(clojure.java [shell :refer (sh)]
+                        [io :as io]))
 
-(def version
-  (let [{:keys [exit out err]} (sh "git" "describe" "--tags" "--long")]
-    (if (= 128 exit) "0.0.1"
-        (let [[[_ tag commits hash]] (re-seq #"(.*)-(.*)-(.*)" out)]
-          (if (zero? (edn/read-string commits))
-            tag
-            (let [[[_ stem lst]] (re-seq #"(.*\.)(.*)" tag)]
-              (join [stem (inc (read-string lst)) "-" "SNAPSHOT"])))))))
+(def default-version "0.0.1-SNAPSHOT")
 
-(def versions {:up "0.0.3"})
+(defn head-ok []
+  (-> (sh "git" "rev-parse" "--verify" "HEAD")
+      :exit zero?))
 
-(defproject pro.juxt/juxtweb version
-  :plugins [[lein-up ~(versions :up)]]
+(defn refresh-index []
+  (sh "git" "update-index" "-q" "--ignore-submodules" "--refresh"))
+
+(defn unstaged-changes []
+  (-> (sh "git" "diff-files" "--quiet" "--ignore-submodules")
+      :exit zero? not))
+
+(defn uncommitted-changes []
+  (-> (sh "git" "diff-index" "--cached" "--quiet" "--ignore-submodules" "HEAD" "--")
+      :exit zero? not))
+
+;; We don't want to keep having to 'bump' the version when we are
+;; sitting on a more capable versioning system: git.
+(defn get-version []
+  (cond
+   (not (let [gitdir (io/file ".git")]
+          (and (.exists gitdir)
+               (.isDirectory gitdir))))
+   default-version
+
+   (not (head-ok)) (throw (ex-info "HEAD not valid" {}))
+
+   :otherwise
+   (do
+     (refresh-index)
+     (let [{:keys [exit out err]} (sh "git" "describe" "--tags" "--long")]
+       (if (= 128 exit) default-version
+           (let [[[_ tag commits hash]] (re-seq #"(.*)-(.*)-(.*)" out)]
+             (if (and
+                  (zero? (edn/read-string commits))
+                  (not (unstaged-changes))
+                  (not (uncommitted-changes)))
+               tag
+               (let [[[_ stem lst]] (re-seq #"(.*\.)(.*)" tag)]
+                 (join [stem (inc (read-string lst)) "-" "SNAPSHOT"])))))))))
+
+(defproject pro.juxt/juxtweb (get-version)
+  :description "The JUXT website"
+  :url "https://juxt.pro"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 ;; Time
+                 [clj-time "0.5.1"]
+                 ;; Hiccup for HTML generation
+                 [hiccup "1.0.4"]
+                 ;; CSS
+                 [garden "0.1.0-beta6"]
+                 ;; Stencil for templating
+                 [stencil "0.3.2"]
+                 ;; Zippers
                  [org.clojure/data.zip "0.1.1"]
+                 ;; Markdown
                  [endophile "0.1.0"]
-                 [clj-time "0.5.1"]]
+                 ;; JTidy
+                 [jtidy "4aug2000r7-dev"]
+                 ]
 
   :source-paths ["src"]
+  :resource-paths ["resources"]
 
-  :up {:component pro.juxt.website/WebApplication
-       :components {[up/up-firefox-reload ~(versions :up)]
-                    {:host "localhost"
-                     :topics [:juxtweb/resource-change]}
-                    [up/up-logging ~(versions :up)] nil
-                    [up/up-http ~(versions :up)] {:port 8081}
-                    [up/up-nrepl ~(versions :up)] {:port 6011}
-                    [up/up-pedestal-webapp ~(versions :up)] {:handler pro.juxt.website/handler}
-                    [up/up-watch ~(versions :up)]
-                    {:watches [{:topic :juxtweb/resource-change
-                                :dir "resources"}
-                               {:topic :juxtweb/resource-change
-                                :dir "../website-static"}]}
-                    [up/up-stencil ~(versions :up)] nil
-                    }})
+  )

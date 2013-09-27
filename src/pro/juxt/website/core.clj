@@ -53,6 +53,7 @@
              :content (constantly content)})))))
 
 (defbefore index-page [context]
+  (infof "index-page page.html.mustache resource is %s" (io/resource "page.html.mustache"))
   (page-response
    context "Home"
    (stencil/render-file
