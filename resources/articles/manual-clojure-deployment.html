@@ -692,7 +692,173 @@ WantedBy=multi-user.target</samp></pre>
         </p>
         <pre><samp class="prodroot"><kbd>pacman -S nginx</kbd></samp></pre>
 
-        <h2>Configuration</h2>
+        <p>
+          Start nginx using systemd, as always :-
+        </p>
+        <pre><samp class="prodroot"><kbd>systemctl start nginx</kbd></samp></pre>
+
+        <h2>Basic configuration</h2>
+
+        <p>
+          The nginx configuration is in /etc/nginx/conf. It consists of
+          a number of <code>server</code> sections. After the initial
+          install on Arch, only one server section is uncommented and
+          active.
+        </p>
+        <p>
+          The default configuration configures nginx to listen on port 80. Let's assume that our web application is listening on port 8000. We want to add a rule that will route traffic from port 80 to port 8000.
+        </p>
+
+        <p>
+          Locate the server section containing the line <samp>listen
+          80;</samp>, and change the <samp>location /</samp> subsection to the following :-
+        </p>
+
+        <pre><samp>location / {
+  index index.html;
+  proxy_pass http://localhost:8000;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header Host $http_host;
+}</samp></pre>
+
+        <p>
+          Remember to tell nginx to reload the configuration every time you modify it :-
+        </p>
+        <pre><samp class="prodroot"><kbd>systemctl reload nginx</kbd></samp></pre>
+
+        <p>
+          Unless the reload went smoothly without any problems, systemd
+          we'll prompt you how to show the errors.
+        </p>
+
+        <p>
+          Now test that your website is working on port 80. If it is, great!
+        </p>
+
+        <aside>
+          <p>
+            The proxy_pass directive causes hyperlinks in your HTML
+            pages need to be rewritten so that they go through the nginx
+            server, and not directly to your webapp.
+          </p>
+          <p>
+            It is recommended that you write your web
+            application so that it works standalone and don't assume the
+            presence of a reverse proxy like nginx.
+          </p>
+        </aside>
+
+        <h2>Static content</h2>
+
+        <p>
+          Static content (content that doesn't change) can be served by
+          our Clojure application but it is usually a good idea to
+          delegate this task to nginx so that load can be taken off the
+          application. This can also free up threads and other
+          resources.
+        </p>
+
+        <p>
+          Move the proxy declarations into their own location
+          section. You can use the <code>try_files</code> declaration to
+          ask nginx to see if the static resource exists first, and if
+          not it doesn't, to direct the request to the Clojure
+          application. If the Clojure application can't find the
+          resource, it can generate the 404 page.
+        </p>
+
+        <pre><samp>location @webapp {
+  index index.html;
+  proxy_pass http://localhost:8000;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header Host $http_host;
+}
+
+location / {
+  index index.html;
+  root /home/juxt/public;
+  try_files $uri @webapp;
+}</samp></pre>
+
+        <p>
+          (In this example, we assume static files are kept under <code>/home/juxt/public</code>).
+        </p>
+
+        <p>
+          Now reload the configuration :-
+        </p>
+        <pre><samp class="prodroot"><kbd>systemctl reload nginx</kbd></samp></pre>
+
+        <p>and check that your website is still working as expected.</p>
+
+        <h2>Caching</h2>
+
+        <aside>
+          <p>
+            Another use of reverse proxies like nginx is to cache
+            dynamic content for a period of time, taking more load off
+            your application. If you website suddenly became the latest
+            hot topic on Reddit or HackerNews, you wouldn't want your
+            website to crawl to a halt due to the unexpected load.
+          </p>
+        </aside>
+
+        <p>
+          We'll assume the website domain is <code>juxt.pro</code> but
+          you should change this to your own website address.
+        </p>
+
+        <p>
+          Add the following lines to the main http section :-
+        </p>
+
+<pre><samp>proxy_cache_path /var/cache/nginx/juxt.pro levels=1:2 keys_zone=juxt.pro:8m max_size=1000m inactive=600m;
+proxy_temp_path /var/cache/nginx/tmp;</samp></pre>
+
+        <p>NB: Remeber to change <em>all</em> <code>juxt.pro</code> strings to your domain!</p>
+
+        <p>
+          Now add the following directives to the <code>location
+          @webapp</code> section.
+        </p>
+
+<pre><samp>proxy_cache juxt.pro;
+proxy_cache_valid 200 302 60m;
+proxy_cache_valid 404 1m;</samp></pre>
+
+        <p>
+          Now, since we've instructed nginx to cache content into a directory, we need to ensure those directories exist.
+        </p>
+
+        <pre><samp class="prodroot"><kbd>mkdir /var/cache/nginx/juxt.pro</kbd></samp></pre>
+        <pre><samp class="prodroot"><kbd>mkdir /var/cache/nginx/tmp</kbd></samp></pre>
+
+        <p>
+          Reload
+        </p>
+
+        <pre><samp class="prodroot"><kbd>systemctl reload nginx</kbd></samp></pre>
+
+        <p>and test.</p>
+
+        <aside>
+          <p>
+            Remember that now you are caching content, changes to your
+            website won't appear for up to an hour afterwards. You can
+            change this setting in the <code>proxy_cache_valid</code>
+            directive. However, if you want to see changes immediately,
+            you need to purge the cache. One quick way of doing this is
+            to delete all the files in
+            <code>/var/cache/nginx/juxt.pro</code>.
+          </p>
+        </aside>
+
+        <!-- Add SSL instructions and then consider removing the full
+             example configuration below -->
+
+        <h2>Full example configuration</h2>
 
         <p>We use the following configuration to traffic from port 443
         (https) to port 8000 (the port our website application is
