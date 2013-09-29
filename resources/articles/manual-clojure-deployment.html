@@ -658,7 +658,6 @@ WantedBy=multi-user.target</samp></pre>
         </p>
       </section>
 
-<!--
       <section>
         <h1>
           Configuring a reverse proxy
@@ -692,30 +691,84 @@ WantedBy=multi-user.target</samp></pre>
           In this section we will install and configure <dfn>nginx</dfn>. Installing it is easy :-
         </p>
         <pre><samp class="prodroot"><kbd>pacman -S nginx</kbd></samp></pre>
--->
 
-<!--
         <h2>Configuration</h2>
 
-Before we start nginx, we need to make the directory where it will cache resources.
+        <p>We use the following configuration to traffic from port 443
+        (https) to port 8000 (the port our website application is
+        running on). </p>
 
-```
-prod# mkdir -p /var/cache/nginx/www.example.com
-```
+        <p>You must ensure that the proxy directory, in this case <code>/var/cache/nginx/juxt.pro</code> has been created before you start nginx (by root).</p>
 
-Now enable and start nginx so that Arch manages it.
+        <pre><samp>worker_processes  1;
 
-```
-prod# systemctl enable osj-app
-prod# systemctl start osj-app
-```
+events {
+    worker_connections  1024;
+}
 
-You'll now be able to access your application over HTTPS: ```https://www.example.com```.
--->
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
 
-<!--
+    proxy_cache_path  /var/cache/nginx/juxt.pro levels=1:2 keys_zone=juxt.pro:8m max_size=1000m inactive=600m;
+    proxy_temp_path /var/cache/nginx/tmp;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server {
+        listen       80;
+        server_name  juxt.pro;
+        rewrite      ^ https://$server_name$request_uri? permanent;
+    }
+
+    server {
+        listen       443;
+        server_name  juxt.pro;
+
+        ssl                  on;
+        ssl_certificate      juxt.pro.crt;
+        ssl_certificate_key  juxt.pro.key;
+
+        ssl_session_timeout  5m;
+
+        ssl_protocols  SSLv2 SSLv3 TLSv1;
+        ssl_ciphers  HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers   on;
+
+        root /home/juxtweb/website-static;
+
+        location @up {
+            proxy_pass              http://localhost:8000;
+            proxy_set_header        X-Real-IP $remote_addr;
+            proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header        Host $http_host;
+
+            proxy_cache juxt.pro;
+            proxy_cache_valid 200 302 60m;
+            proxy_cache_valid 404 1m;
+        }
+
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+            try_files $uri @up;
+            expires 0d;
+        }
+
+        location / {
+            index index.html;
+            try_files $uri @up;
+        }
+
+    }
+}</samp></pre>
+
+
+
+
+        <p>You'll now be able to access your application over HTTPS:
+        <code>https://www.example.com</code></p>
+
       </section>
--->
 
 <!--
       <section>
