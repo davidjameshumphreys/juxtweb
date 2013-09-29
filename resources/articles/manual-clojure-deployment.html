@@ -807,7 +807,7 @@ location / {
 
         <p>
           We'll assume the website domain is <code>juxt.pro</code> but
-          you should change this to your own website address.
+          you should change this to your own website domain.
         </p>
 
         <p>
@@ -817,7 +817,7 @@ location / {
 <pre><samp>proxy_cache_path /var/cache/nginx/juxt.pro levels=1:2 keys_zone=juxt.pro:8m max_size=1000m inactive=600m;
 proxy_temp_path /var/cache/nginx/tmp;</samp></pre>
 
-        <p>NB: Remeber to change <em>all</em> <code>juxt.pro</code> strings to your domain!</p>
+        <p>NB: Remember to change <em>all</em> <code>juxt.pro</code> strings to your domain!</p>
 
         <p>
           Now add the following directives to the <code>location
