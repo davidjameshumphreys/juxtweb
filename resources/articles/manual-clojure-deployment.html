@@ -829,7 +829,8 @@ proxy_cache_valid 200 302 60m;
 proxy_cache_valid 404 1m;</samp></pre>
 
         <p>
-          Now, since we've instructed nginx to cache content into a directory, we need to ensure those directories exist.
+          Now, since we've instructed nginx to cache content into a
+          directory, we need to ensure those directories exist.
         </p>
 
         <pre><samp class="prodroot"><kbd>mkdir /var/cache/nginx/juxt.pro</kbd></samp></pre>
@@ -855,6 +856,131 @@ proxy_cache_valid 404 1m;</samp></pre>
           </p>
         </aside>
 
+        <h3>Cache purging</h3>
+
+        <aside>
+          <p>
+            You may want to be able to purge the cache automatically
+            from the application account by calling a script. This will
+            also eliminate the risk of mistyping the 'delete all files
+            in the nginx cache' command as root, which is potentially
+            catastrophic.
+          </p>
+          <p>
+            We do this by adding a custom script, and give anyone in the
+            http group the ability to run the script, with elevated
+            permissions, without a password, making it ideal for
+            automation. This is done using the <em>sudo</em> system.
+          </p>
+        </aside>
+
+        <p>First we create a script that will allow us to purge the nginx cache of a given domain.</p>
+
+        <p>As root, save the following content to the file <code>/usr/local/bin/purge</code>.</p>
+
+        <pre><samp>#!/bin/bash
+# Purge the nginx cache for a given domain
+
+purge_dir() {
+  dir=/var/cache/nginx/$1
+  if [ -d $dir ]
+  then
+    rm -rf $dir/*
+  else
+    echo "$dir doesn't exist"
+  fi
+}
+
+if [ -n "$1" ]
+then
+  purge_dir $1
+else
+  echo Usage: $0 domain
+fi
+</samp></pre>
+
+        <p>
+          Make the file executable.
+        </p>
+
+        <pre><samp class="prodroot"><kbd>chmod +x /usr/local/bin/purge</kbd></samp></pre>
+
+        <p>
+          Now we have to give elevated permissions to the application
+          account user to run it.
+        </p>
+
+        <aside>
+          <p>
+            You should always edit a sudo file using the
+            <code>visudo</code> command, since any errors might
+            otherwise stop sudo from working, leaving you without admin
+            rights.
+          </p>
+          <p>
+            Rather than editing the main sudoers file, the Arch layout
+            allows us to modularize our contributions to the sudoers
+            configuration, by placing files under
+            <code>/etc/sudoers.d</code>. You can see how this is done at
+            the end of the <code>/etc/sudoers</code> file.
+          </p>
+          <pre><samp>## Read drop-in files from /etc/sudoers.d
+## (the '#' here does not indicate a comment)
+#includedir /etc/sudoers.d</samp></pre>
+          <p>Again, Arch doesn't try to obfuscate how things work but
+          instead rewards the inquisitive user.</p>
+        </aside>
+
+        <pre><samp class="prodroot"><kbd>visudo -f /etc/sudoers.d/purge</kbd></samp></pre>
+
+        <p>
+          The file should be empty. Insert the following single line :-
+        </p>
+
+        <pre><samp>%http ALL=NOPASSWD: /usr/local/bin/purge</samp></pre>
+
+        <aside>
+          <p>
+            This line allows all users in the http group to use sudo to
+            execute our <code>/usr/local/bin/purge</code> script,
+            without requiring a password. You don't have to use the http
+            group, you could use any existing group or create a new one
+            especially for this purpose.
+          </p>
+        </aside>
+
+        <p>
+          Finally, add the application account user to the http group.
+        </p>
+
+        <pre><samp class="prodroot"><kbd>usermod -a -G http juxt</kbd></samp></pre>
+
+        <p>
+          Visit the website to ensure and check that there are files
+          under your domain directory in
+          <code>/var/cache/nginx</code>. From the application account
+          user, test that you can purge the cache, you can try first
+          without sudo.
+        </p>
+
+        <pre><samp class="prodacct"><kbd>purge juxt.pro</kbd></samp></pre>
+
+        <p>
+          This should fail like this :-
+        </p>
+
+        <pre><samp>rm: cannot remove '/var/cache/nginx/beta.juxt.pro/*': Permission denied</samp></pre>
+
+        <p>
+          Now try with sudo.
+        </p>
+
+        <pre><samp class="prodacct"><kbd>sudo purge juxt.pro</kbd></samp></pre>
+
+        <p>
+          Now check that the domain directory. It should be empty.
+        </p>
+
         <!-- Add SSL instructions and then consider removing the full
              example configuration below -->
 
@@ -864,7 +990,9 @@ proxy_cache_valid 404 1m;</samp></pre>
         (https) to port 8000 (the port our website application is
         running on). </p>
 
-        <p>You must ensure that the proxy directory, in this case <code>/var/cache/nginx/juxt.pro</code> has been created before you start nginx (by root).</p>
+        <p>You must ensure that the proxy directory, in this case
+        <code>/var/cache/nginx/juxt.pro</code> has been created before
+        you start nginx (by root).</p>
 
         <pre><samp>worker_processes  1;
 
@@ -927,9 +1055,6 @@ http {
 
     }
 }</samp></pre>
-
-
-
 
         <p>You'll now be able to access your application over HTTPS:
         <code>https://www.example.com</code></p>
