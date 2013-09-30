@@ -9,3 +9,5 @@ We have expertise in:
 * Training and coaching developers in the Clojure language.
 
 We are based in London, UK, and are working with a number of companies to help them achieve more by exploiting the simplicity of Clojure.
+
+(This is a test)
