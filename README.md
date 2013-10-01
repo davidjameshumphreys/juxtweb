@@ -73,18 +73,7 @@ For bigger articles, _chunking_ can be enabled via ```/resources/articles.edn```
 
 ## Deployment
 
-Once you are happy with changes, make sure you commit and push (the deploy script will check this for you).
-
-Ensure you have SSH access to the ```juxtweb``` user on ```juxt.pro```.
-
-Run the deploy script :-
-
-
-    bin/deploy
-
-The server is started under Jig, with the following incantation.
-
-    lein with-profile "dev" run -m user/go
+Once you are happy with changes, make sure you commit and push. A commit hook will cause auto-deployment on beta.juxt.pro. Check this first manually and if you are happy, reset the production version manually.
 
 ## License
 
