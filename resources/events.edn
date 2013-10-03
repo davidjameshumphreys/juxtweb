@@ -20,7 +20,7 @@
   :description "A joint event with the London Java Community and London Clojurians: [ClojureFest](http://www.meetup.com/Londonjavacommunity/events/138309612/) - Malcolm speaking on Clojure concurrency, core.logic and more. Sign up [here](http://www.meetup.com/Londonjavacommunity/events/138309612/)"}
 
  {:date #inst "2013-10-01T18:30+01:00"
-  :description "London Clojurians Dojo - James Adams and Malcolm Sparks will talk about how they build and deployed an HTML5 multi-user game in Clojure with web-sockets and Datomic. More details to follow or [contact Malcolm directly](mailto:malcolm@juxt.pro?subject=Clojure-Dojo-Event-1st-October)."}
+  :description "London Clojurians Dojo - James Adams and Malcolm Sparks spoke about how they built and deployed an HTML5 multi-user game in Clojure with web-sockets and Datomic. See the video [here](http://skillsmatter.com/podcast/home/building-a-multi-user-poker-application-in-clojure-and-datomic)"}
 
  {:title "Clojure Training Course"
   :date #inst "2013-12-04T09:30+00:00"
