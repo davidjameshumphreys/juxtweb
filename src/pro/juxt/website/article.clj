@@ -21,6 +21,7 @@
    [hiccup.core :as hiccup]
    [io.pedestal.service.interceptor :refer (defbefore defhandler)]
    [stencil.core :as stencil]
+   [pro.juxt.website.atom :as atom]
    [pro.juxt.website.util :refer (get-navbar markdown emit-element)]
    [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]))
 
@@ -125,3 +126,10 @@
       (assoc article
         :toc (when (:chunked article) (toc a))
         :abstract (with-out-str (emit-element (grab-abstract a)))))))
+
+(defbefore articles-atom-feed [{:keys [url-for] :as context}]
+  (assoc context :response
+         (let [metadata (->> "articles.edn" resource slurp edn/read-string)]
+           {:status 200
+            :headers {"Content-Type" "application/atom+xml"}
+            :body (atom/generate-feed url-for (get-articles))})))

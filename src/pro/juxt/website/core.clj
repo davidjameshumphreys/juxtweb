@@ -14,10 +14,13 @@
    jig
    [jig.web.app :refer (add-routes)]
    [pro.juxt.website
-    [article :refer (get-articles article-handler)]
+    [article :refer (get-articles article-handler articles-atom-feed)]
     [blog :refer (get-blog-articles)]
     [feeds :refer (feed-handler)]
-    [pretty :refer (ppxml)]]
+    [pretty :refer (ppxml)]
+    [util :refer (emit-element get-navbar markdown)]
+    [events :refer (get-events)]
+    [profiles :refer (get-profiles)]]
    [ring.util.response :refer (redirect) :as ring-resp]
    [ring.middleware.file :as file]
    [clojure.java.io :refer (resource)]
@@ -34,11 +37,7 @@
    [clojure.data.zip :as dz]
    [clojure.tools.logging :refer :all]
    [ring.util.codec :as codec]
-   [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]
-   [pro.juxt.website
-    [util :refer (emit-element get-navbar markdown)]
-    [events :refer (get-events)]
-    [profiles :refer (get-profiles)]])
+   [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)])
   (:import (jig Lifecycle)))
 
 (defn page-response [context active-nav content]
@@ -105,8 +104,12 @@
       ["/blog.html" {:get blog-page}]
       ["/clients.html" {:get clients-page}]
       ["/resources/index.html" {:get resource-index-page}]
-      ["/articles/*path" {:get article-handler}]
+
+      ;; TODO Consolidate feed work
+      ["/feeds/atom.xml" {:get articles-atom-feed}]
       ["/feeds/*feed" {:get feed-handler}]
+
+      ["/articles/*path" {:get article-handler}]
       ["/*static" {:get (static (:static-path config))}]
       ]))
 

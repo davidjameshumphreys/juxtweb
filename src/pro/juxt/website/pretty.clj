@@ -28,6 +28,8 @@ Return the configured pretty-printer."
         transformer (.newTransformer
                      (javax.xml.transform.TransformerFactory/newInstance))]
     (.setOutputProperty transformer
+                        javax.xml.transform.OutputKeys/OMIT_XML_DECLARATION "yes")
+    (.setOutputProperty transformer
                         javax.xml.transform.OutputKeys/INDENT "yes")
     (.setOutputProperty transformer
                         "{http://xml.apache.org/xslt}indent-amount" "2")
