@@ -1,23 +1,31 @@
 <div class="row-fluid">
   <div class="span11">
     <h2>Articles</h2>
-    <!-- TODO: list of articles from articles.edn, which should be pushed into mustache -->
-    <!-- TODO: Article source code should allow mustache tags for content generation, etc.. -->
+    <p>
+      Over the next few months we will be publishing a series of
+      interconnected articles. These (and many other useful
+      Clojure-related articles) are syndicated
+      on <a href="http://planet.clojure.in">Planet Clojure</a>.
+    </p>
     <dl>
       {{#articles}}
-      <dt><a href="/{{path}}">{{title}}</a></dt>
+      <dt><a href="{{href}}">{{title}}</a></dt>
       <dd>
         <p>{{{abstract}}}</p>
         {{#chunked}}
-        <p>Either view as a <a href="/{{path}}">single HTML page</a> or as individual chapters :-</p>
+        <p>Either view as a <a href="{{href}}">single HTML page</a> or as individual chapters :-</p>
         <ul style="list-style-type: none">
           {{#toc}}
-          <li><a href="/{{path}}?sect={{section}}">{{title}}</a></li>
+          <li><a href="{{href}}?sect={{section}}">{{title}}</a></li>
           {{/toc}}
         </ul>
         {{/chunked}}
       </dd>
       {{/articles}}
     </dl>
+    <div style="float: right">
+      <a href="{{atom-feed-href}}"><img src="/img/feed-icon.svg" style="width: 16pt"/></a>
+      <a href="{{atom-feed-href}}">Subscribe</a>
+    </div>
   </div>
 </div>

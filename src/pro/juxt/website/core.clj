@@ -14,12 +14,12 @@
    jig
    [jig.web.app :refer (add-routes)]
    [pro.juxt.website
-    [article :refer (get-articles article-handler articles-atom-feed)]
+    [article :refer (get-articles article-handler)]
     [blog :refer (get-blog-articles)]
-    [feeds :refer (feed-handler)]
     [pretty :refer (ppxml)]
     [util :refer (emit-element get-navbar markdown)]
     [events :refer (get-events)]
+    [atom :as atom]
     [profiles :refer (get-profiles)]]
    [ring.util.response :refer (redirect) :as ring-resp]
    [ring.middleware.file :as file]
@@ -49,6 +49,7 @@
             {:ctx (let [ctx (get-in context [:app :jig.web/context])]
                     (if (= ctx "/") "" ctx))
              :navbar (get-navbar (:url-for context) active-nav)
+             :title (str "JUXT - " active-nav)
              :content (constantly content)})))))
 
 (defbefore index-page [context]
@@ -71,11 +72,15 @@
     "blog.html" {:markdown markdown :articles (get-blog-articles)})))
 
 
-(defbefore resource-index-page [context]
+(defbefore resource-index-page [{:keys [url-for] :as context}]
   (page-response
    context "Resources"
    (stencil/render-file
-    "resources-index.html" {:markdown markdown :articles (get-articles)})))
+    "resources-index.html"
+    {:markdown markdown
+     :articles (get-articles (edn/read-string (slurp (resource "articles.edn")))
+                             (:url-for context))
+     :atom-feed-href (url-for :pro.juxt.website.core/articles-atom-feed)})))
 
 (defbefore root-page
   [{:keys [url-for] :as context}]
@@ -93,6 +98,16 @@
       {:root root-path, :index-files? true, :allow-symlinks? false}))))
 
 ;; Jig component
+(defbefore articles-atom-feed [{:keys [url-for] :as context}]
+  (let [now (.getTime (java.util.Date.))]
+    (assoc context :response
+           (let [metadata (->> "articles.edn" resource slurp edn/read-string)]
+             {:status 200
+              :headers {"Content-Type" "application/atom+xml"}
+              :body (atom/generate-feed url-for (get-articles
+                                                 (filter (comp (partial > now) (memfn getTime) :publication-date)
+                                                         (edn/read-string (slurp (resource "articles.edn")))) url-for))}))))
+
 (deftype Component [config]
   Lifecycle
   (init [_ system]
@@ -104,11 +119,7 @@
       ["/blog.html" {:get blog-page}]
       ["/clients.html" {:get clients-page}]
       ["/resources/index.html" {:get resource-index-page}]
-
-      ;; TODO Consolidate feed work
       ["/feeds/atom.xml" {:get articles-atom-feed}]
-      ["/feeds/*feed" {:get feed-handler}]
-
       ["/articles/*path" {:get article-handler}]
       ["/*static" {:get (static (:static-path config))}]
       ]))

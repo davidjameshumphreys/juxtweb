@@ -2,71 +2,52 @@
   (:require
    clj-time.coerce
    [pro.juxt.website.pretty :refer (ppxml)]
+   [pro.juxt.website.article :refer (parse-article compile-article-content)]
+   [pro.juxt.website.util :refer (emit-element)]
    [hiccup.core :refer (html h)]
    [clj-time.format :as tf]
-   [hiccup.page :refer (xml-declaration)])
-)
+   [clojure.xml :as xml]
+   [clojure.zip :as zip]
+   [clojure.data.zip :as dz]
+   [clojure.data.zip.xml :as zxml :refer (xml-> xml1-> attr= tag= text)]
+   [hiccup.page :refer (xml-declaration)]))
+
+(defn extract-article-sections [article]
+  {:post [%]}
+  (interpose
+   "\n"
+   (for [sect (map zip/node (xml-> (zip/xml-zip article)
+                                     dz/descendants :article :section))]
+     (with-out-str (emit-element sect))
+     )))
 
 (defn generate-feed [url-for articles]
   (str
    (xml-declaration "utf-8")
    "\r\n"
    (ppxml
-    (html
+    (html ;; mode?
      [:feed {:xmlns "http://www.w3.org/2005/Atom"}
       [:title {:type "text"} "JUXT Articles"]
-      ;;    [:subtitle "A subtitle."]
       ;; TODO Make these absolute (there's a way of doing that in a recent version of Pedestal)
-      [:link {:href (url-for :pro.juxt.website.article/articles-atom-feed) :ref "self"}]
-      [:link {:href (url-for :pro.juxt.website.core/resource-index-page)}]
-      ;;    [:id "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6"]
-      [:updated "2003-12-13T18:30:02Z"]
+      [:link {:href (url-for :pro.juxt.website.core/articles-atom-feed) :rel "self" :type "application/atom+xml"}]
+      [:link {:href (url-for :pro.juxt.website.core/index-page) :rel "hub"}]
+      [:generator {:uri "https://github.com/juxt/juxtweb"} "JUXT's Atom Generator"]
 
-      (for [{:keys [title abstract publication-date] {:keys [name email]} :author} articles]
+      (for [{:keys [title abstract publication-date path article] {:keys [name email]} :author} (filter :syndicate articles)]
         [:entry
          [:title {:type "text"} title]
-         ;; Use clj-time
-         ;;         [:updated (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssXXX") publication-date)]
          [:updated (tf/unparse (tf/formatters :date-time-no-ms) (clj-time.coerce/from-date publication-date))]
 
          ;; "If the value of "type" is "xhtml", the content of the Text
          ;; construct MUST be a single XHTML div element." RFC 4287 (p8)
 
+         [:link {:href (url-for :pro.juxt.website.article/article-handler :params {:path path})
+                 :rel "alternate" :type "html"}]
          [:summary {:type "xhtml"} [:div {:xmlns "http://www.w3.org/1999/xhtml"} abstract]]
          [:author
           [:name name]
           (when email [:email email])]
-         ])])))
-
-  )
-
-
-
-
-;; <?xml version="1.0" encoding="utf-8"?>
-
-;; <feed xmlns="http://www.w3.org/2005/Atom">
-
-;;         <title>Example Feed</title>
-;;         <subtitle>A subtitle.</subtitle>
-;;         <link href="http://example.org/feed/" rel="self" />
-;;         <link href="http://example.org/" />
-;;         <id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
-;;         <updated>2003-12-13T18:30:02Z</updated>
-
-
-;;         <entry>
-;;                 <title>Atom-Powered Robots Run Amok</title>
-;;                 <link href="http://example.org/2003/12/13/atom03" />
-;;                 <link rel="alternate" type="text/html" href="http://example.org/2003/12/13/atom03.html"/>
-;;                 <link rel="edit" href="http://example.org/2003/12/13/atom03/edit"/>
-;;                 <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
-;;                 <updated>2003-12-13T18:30:02Z</updated>
-;;                 <summary>Some text.</summary>
-;;                 <author>
-;;                       <name>John Doe</name>
-;;                       <email>johndoe@example.com</email>
-;;                 </author>
-;;         </entry>
-
-;; </feed>
+         [:content {:type "xhtml"} [:div {:xmlns "http://www.w3.org/1999/xhtml"}
+                                    (compile-article-content (parse-article path) path title 0)
+]]])]))))

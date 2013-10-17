@@ -32,6 +32,7 @@
   ;; An alternative emit-element that doesn't cause newlines to be
   ;; inserted around punctuation.
   [e]
+  {:pre [e]}
   (if (instance? String e)
     (print e)
     (do

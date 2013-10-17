@@ -47,10 +47,10 @@
 
 (defn get-events [content]
   (let [now (.getTime (java.util.Date.))
-        [prev-events upcoming-events] (split-with #(< ((comp get-time :date) %) now) (sort-by (comp get-time :date) (comparator <) (edn/read-string (slurp (resource "events.edn")))))]
+        [prev-events upcoming-events] (split-with
+                                       #(< ((comp get-time :date) %) now)
+                                       (sort-by (comp get-time :date) (comparator <) (edn/read-string (slurp (resource "events.edn")))))]
     (str "<h3>Upcoming events</h3>"
          (apply str (map render upcoming-events))
          "<h3>Past events</h3>"
-         (apply str (map render prev-events)))
-    )
-  )
+         (apply str (map render prev-events)))))
