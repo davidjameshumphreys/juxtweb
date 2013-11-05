@@ -464,6 +464,9 @@ Are you sure you want to continue connecting (yes/no)?</small></samp></pre>
         our Clojure application source code.</p>
 
         <pre><samp class="prodroot"><kbd>pacman -S jdk7-openjdk git</kbd></samp></pre>
+<!-- CentOS
+        <pre><samp class="prodroot"><kbd>yum install java-1.7.0-openjdk-devel git-core</kbd></samp></pre>
+-->
 
       </section>
       <section>
@@ -510,13 +513,9 @@ Are you sure you want to continue connecting (yes/no)?</small></samp></pre>
         </p>
         <pre><samp class="prodacct"><kbd>echo 'PATH=$HOME/bin:$PATH' &gt;&gt; .bashrc</kbd></samp></pre>
         <p>
-          Log out with exit
+          Source the profile
         </p>
-        <pre><samp class="prodacct"><kbd>exit</kbd></samp></pre>
-        <p>
-          Log back in to the application account.
-        </p>
-        <pre><samp class="prodroot"><kbd>su - juxt</kbd></samp></pre>
+        <pre><samp class="prodacct"><kbd>source $HOME/.bashrc</kbd></samp></pre>
       </section>
 
       <section>
@@ -531,6 +530,24 @@ Are you sure you want to continue connecting (yes/no)?</small></samp></pre>
           the production machine.
         </p>
         <pre><samp class="prodacct"><kbd>git clone https//github.com/juxt/juxt-accounting</kbd></samp></pre>
+
+        <h2>
+          Private repositories
+        </h2>
+
+        <p>
+          Use ssh-keygen as before to generate a new keypair for the application account.
+<!--
+
+      ssh-keygen -t rsa
+      copy .ssh/id_rsa.pub to Deploy Keys on Github (Settings/Deploy Keys)
+        <pre><samp class="prodacct"><kbd>ssh -T git@github.com</kbd></samp></pre>
+        <pre><samp class="prodacct"><kbd>git clone git@github.com:juxt/juxt-accounting</kbd></samp></pre>
+
+-->
+        </p>
+        <!-- TODO Consider called application account 'deploy' account -->
+
         <h2>
           Running the application
         </h2>

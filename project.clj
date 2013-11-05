@@ -76,6 +76,10 @@
                  [endophile "0.1.0"]
                  ;; JTidy
                  [jtidy "4aug2000r7-dev"]
+                 ;; core.match
+                 [org.clojure/core.match "0.2.0"]
+                 ;; instaparse for parsing and enlive structure transformation
+                 [instaparse "1.2.4"]
                  ]
 
   :source-paths ["src"]

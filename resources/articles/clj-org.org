@@ -1,0 +1,94 @@
+* Emacs org-mode
+
+At EuroClojure last month, Kai Wu gave an impressive lightning talk
+about Literate Programming and Babel.
+
+Literate Programming was an idea by Donald Knuth which he considered to
+be his greatest achievement (quite a claim given everything else he is
+famous for, including creating TeX and writing "The Art Of Computer
+Programming".
+
+Literate Programming promotes documentation to the level of the
+code. This is particularly relevant for Clojure programming the powerful
+expressiveness of the language can often lead to terse code. Even with a
+heavily commented code-base, the documentation explaining the overall
+design has to be inferred, or located elsewhere in *README* files and
+Wikis. This is a shame, because it's this information that is key in any
+sustainable approach to software maintenance.
+
+Most Clojure programmers today use Emacs, which has a built-in facility
+for creating /literate/ programs, called *Babel*. Babel is but one part
+of a larger suite of utilities called *Org*.
+
+* Writing documents in org-mode
+
+*Org* is a plain-text format, similar to the Wiki-text formats such as
+Markdown in popular use today. While Emacs has custom support for these
+other formats, *Org* has a particularly rich feature set that makes it
+ideal for writing longer, more complex, documents. This includes support
+for tables, footnotes, comments and document metadata (drawers).
+
+The primary concept in Org is the outline, a hierarchical tree of
+headings, declared by prefixing with asterisks.
+
+#+BEGIN_SRC 
+* Fruit
+Here's some information about fruit.
+** Oranges
+Oranges are not the only fruit.
+** Apples
+There are apples as well.
+** Bananas
+Oh, and bananas too!
+#+END_SRC
+
+One downside to org-mode, from the point of view of sharing
+documentation and literate programs in teams, is the tacit assumption
+that everyone who needs to edit the source is using Emacs. While that's
+not often true, *Org* documents are formatted as plain-text, so in
+practise they can be edited in any editor.
+
+But Emacs also contains functionality for exporting Org documents to
+other media. With Babel for instance, code embedded in documentation is
+extracted (a process Knuth called /tangling/) to form programs suitable
+for compilation.
+
+This poses a problem for processing *Org* documents in Clojure
+programs. While it's not insurmountable to execute this functionality
+automatically by running Emacs in 'batch' (headless) mode, non-trivial
+use-cases involve writing scripts in e-lisp to drive the process. It
+would be useful if we had the choice to parse *Org* documents into
+Clojure data.
+
+* Parsing org-mode
+
+# (Instaparse)
+
+# Insert tests here too!
+
+# Use org tables for test data
+
+* Let's test our work
+
+| Test       | file |   |   |   |
+|------------+------+---+---+---|
+| simple.org |      |   |   |   | 
+
+# Use Emacs batch to export all this stuff into code
+# Learn Clojure's Babel support  
+
+* Future work
+
+* Colophon
+
+This article was authored in *Org* format, in an Emacs =org-mode=
+buffer. The article also forms the source code to *clj-org*, a Clojure
+parser for Org documents, which was used by juxtweb to publish to HTML
+and Atom formats.
+
+* Acknowledgments
+
+Special thanks to Mark Engelberg for writing Instaparse and for
+suggesting a strategy for transforming *Org* documents into ones that
+could be described with a context free grammar (CFG). Thanks also to Sam
+Putman for the code used to serialize Enlive trees back into strings.
