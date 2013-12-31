@@ -70,6 +70,7 @@
                  [garden "0.1.0-beta6"]
                  ;; Stencil for templating
                  [stencil "0.3.2"]
+                 [jig/stencil "1.6.0"]
                  ;; Zippers
                  [org.clojure/data.zip "0.1.1"]
                  ;; Markdown
