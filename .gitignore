@@ -3,3 +3,4 @@
 /.lein-repl-history
 /logs/
 /target
+.DS_Store
