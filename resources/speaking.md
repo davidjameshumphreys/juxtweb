@@ -1,5 +1,3 @@
-### Speaking
+### Tech talks
 
-If you are thinking about using Clojure in your organisation, ask us to
-give a talk to your colleagues about our experiences adopting Clojure in
-a commercial setting.
+Ask us to give a talk to your organisation about adopting Clojure on large-scale projects.
