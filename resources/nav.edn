@@ -2,5 +2,5 @@
  {:label "Home" :href :pro.juxt.website.core/index-page}
  {:label "Clients" :href :pro.juxt.website.core/clients-page}
  #_{:label "Blog" :href :pro.juxt.website.core/blog-page}
- {:label "Articles" :href :pro.juxt.website.core/resource-index-page}
+ #_{:label "Articles" :href :pro.juxt.website.core/resource-index-page}
  ]
